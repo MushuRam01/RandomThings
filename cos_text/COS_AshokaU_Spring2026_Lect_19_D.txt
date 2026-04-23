@@ -1,0 +1,303 @@
+       CS–2710-1                        Spring 2026                                          Cache Memory
+      Computer Organization and Systems (COS)                               First introduced in a landmark paper:
+                                                                            M. Wilkes, Slave memories and dynamic storage
+                                                                              allocation, IEEE Transactions on Electronic
+                                                                              Computers, pp. 270-271, 1965
+      AI/ML
+      DS/LLM                Lecture #19                                     First commercially implemented in IBM 360/85
+                                                                              (1968)
+                            15 April 2026                                   More than ~1000 research papers published since
+                                                                             then …
+      CO       CA                                                           Foundational concept in CA, OS, Networks, ..
+                                                                            What it means? Cache is a high-speed, temporary data
+                     Ashoka University                            BBB        storage layer that keeps a subset of frequently
+                                                                             accessed data (so that future requests from CPU can
+                                                                             be served faster ..); based on temporal/spatial locality;
+
+
+
+
+      Direct-Mapped Cache                                                    Does a cache entry contain garbage?
+     Location in cache determined by MM-address
+                                                                            • Problem: when a program starts up, cache is
+
+
+     Direct mapped: MM  cache, is fixed, i.e., the destination
+                                                                              empty (garbage).
+
+
+     in cache is unique;
+                                                   Many-to-one                – It might contain data left from previous
+       (Block address) modulo (#Blocks in cache)
+                                                          mapping               program/random bits;
+                             Assume: Width of address bus: 5 bits
+    8 blocks                 Addressable Memory Space = 25 = 32 blocks        – How do you make sure you don’t match a tag
+                             MM-size = 32 blocks (a block might comprise        accidentally?
+                             several words);
+                             Cache size: 8 blocks
+                                                  #Blocks is a power of 2
+                                                                            • Solution:
+32 blocks                                     
+
+                                                  Use low-order address
+                                                                            • An extra “valid” bit per cache-entry
+                                              
+
+                                                  bits;
+                                                 CPU generates MM-
+                                                  address;
+                                                 How it is converted to
+                                                  cache address (index)?
+    Tags and Valid Bits                                           Direct-Mapped Cache
+   How do we know which particular block is                   Location in cache determined by MM-address
+    stored in a cache location?                                Direct mapped: only one choice
+     Store missing part of block address as well as
+                                                                     (Block address) modulo (#Blocks in cache)
+      the data (cache data means instructions/data)
+     Actually, only need the high-order bits
+                                                               8 blocks
+     Called the tag (resolves the problem of many-                                                 CPU generates MM-address;
+      to-one mapping: MM Cache)                                                                    How it is converted to cache
+                                                                                                     address (index)?
+   What if there is no data in a location?
+                                                                                            32 blocks
+     Valid bit: 1 = present, 0 = not present                                                                 MM-address:
+                                                                                                              00001
+     Initially all valid-bits set to 0; a valid-bit is set
+
+      to 1, when the requested item is loaded from                                                      tag-bits
+                                                                                                                      cache-index
+      MM to cache
+
+
+
+
+                                                              MM-Address to Cache-Address                  MM-address – 32 bits;
+    Cache Management                                          Resolution (Block size = 1 word)             Cache: 1 K blocks;
+                                                              Hardware realization                         1 block = 1 word
+ Block placement in cache from MM?                                                                        Direct-mapped, write
+   (i) direct-mapped, (ii) set-associative, (iii) fully-                                                   through;
+associative;                                                                                               What will be the
+                                                                                                           cache size?
+ Block identification in cache by CPU?
+
+    index bits, tag-bits, valid-bit;                                                                  # rows (cache-lines) = 1024;
+                                                                                                      Each row comprises
+ On cache miss -> block replacement?                                                                 1 (valid-bit) + 20 (tag-bits) +
+    LRU, LFU, random;                                                                                 32 (data-bits) = 53 bits;
+                                                                                                      Write-through does not
+ Write Strategy?                                                                                     need any extra bit;
+                                                                                                      Total size of the cache
+   write through, write back (need dirty-bit);
+                                                                                                      = 53 1024 bits = 53 Kbits
+ Miss handling?
+
+    read miss; write miss;
+    Cache Hit/Miss                                                       Issues in Cache Management
+ CPU sends address for MM requesting retrieval                             Block placement: MM  Cache
+  (instruction/data);
+                                                                             - direct-mapped, set-associative, fully associative
+ MM-address resolved to cache-address; item first
+
+  searched in cache;                                                      Block identification: index, tag, valid-bit
+ On cache hit -> read-hit, write-hit (actions?)                          Block replacement: LRU, LFU, random
+
+ On cache miss -> read-miss, write-miss (actions?)                       Write strategy (CPU wants to store data in
+         Stall the CPU pipeline                                           Mem): write-through, write-back (dirty-bit)
+         Fetch block from next level of hierarchy
+                                                                          Miss handling:
+         Instruction cache miss
+
+            PC = PC -4; Restart instruction fetch: PC = PC +4               -- cache read miss
+         Data cache miss
+                                                                             --- cache write miss
+            Complete data access
+                                                                                  * write-allocate, no-write-allocate
+
+
+
+
+Memory Hierarchy Basics                                                          Memory Hierarchy Basics
+                                                                              Hit-time (time to match a requested item in cache and if
+       When a word is not found in the cache, a miss                          found, to transfer it to CPU); time measured in clock cycles;
+        occurs:                                                               Miss rate
+
+             Fetch word from lower level in hierarchy, requiring a              Fraction of cache requests that result in misses
+              higher latency reference                                        Miss-penalty (time to pull an item to cache from the lower
+             Lower level may be another cache or the main                     level and to transfer it to CPU)
+              memory                                                            Causes of misses
+             Also fetch the other words contained within the block
+                                                                                     Compulsory
+                    Takes advantage of spatial locality
+                                                                                          First reference to a block
+               Place block into cache in any location within its set,               Capacity
+                determined by address
+                                                                                          Blocks discarded and later retrieved
+                    [block address (MM)] mod (number of sets)
+                                                                                     Conflict
+                                                                                          Program makes repeated references to multiple addresses from
+                                                                                           different blocks that map to the same location in the cache
+Parameters in Cache Management                              Dealing with Stores (CPU writing data to cache)
+
+Average memory access time (AMAT)                          • Stores must be handled differently than
+= hit-time + (miss-rate  miss-penalty)                      loads, because...
+Note: hit-time and miss-penalty are expressed in              – they don’t necessarily require the CPU to stall
+# clock cycles
+                                                              – they change the content of cache
+                                                                   Creates a memory consistency question ... how do
+Average # memory-stall cycles (AMSC) =
+(# memory requests/IC)  miss-rate  miss-penalty                  you ensure memory gets the correct value?
+
+                                                                                                     the one in cache
+CPU-time = IC  CPI  CCT
+         = IC  (Ideal-CPI + AMSC)  CCT
+Ideal-CPI refers to the case when we have perfect cache,
+i.e., without any misses
+
+
+
+
+   Policy decisions for stores (writes)                                       Dealing with stores
+ • Do you keep memory and cache identical?                 • On a store hit, write the new data to cache
+                                                             – In a write-through cache, write the data immediately to
+    – write-through cache: all writes go to both cache         memory.
+      and main memory                                        – In a write-back cache
+    – write-back cache: writes go only to cache                   • Mark the line as dirty.
+                                                                      – means cache has correct value, but memory doesn’t
+      Modified cache lines are written back to
+                                                                  • On any cache miss in a write-back cache, if the line to be
+      memory when the line is replaced/or when the                  replaced in the cache is dirty, write it back to memory
+      program ends                                                • Note: Read miss in cache might cause “write” to memory!
+
+ • Do you make room in cache for store miss?               • On a store miss,                               Solution:
+                                                                                                            write buffer olds data
+                                                             –   In a write-allocate cache,                 waiting to be written to
+    – write-allocate: on a store miss, bring target line          • Initiate a cache block load from memory memory CPU continues
+      into the cache.                                        –   In a no-write-allocate cache,
+                                                                                                            immediately;
+                                                                                                            Only stalls on write if
+                                                                                                            write buffer is already full
+    – No-write-allocate: on a store miss, ignore cache            • Write directly to memory
+Write-Through with No-Write-allocation                  Write-Back with Write-Allocation
+    CPU sends                                           CPU sends
+    Memory requests                                     Memory requests
+
+
+
+
+Cache Architecture other than Direct-
+Mapped: Associative Caches                              Associative Cache Example
+                                                                                             Size of each set = 2
+                                                                                             2-way set associative
+ n-way set associative
+ (direct-mapped is 1-way set associative)
+
+      Each set contains n entries
+      MM-address, n, cache size, determine to which
+
+       set element to go ..
+      Search all entries in a given set at once
+
+      n comparators
+
+      Fully associative
+
+      Allow a given block to go in any cache entry
+
+      Requires all entries to be searched at once:
+
+      hit-time increases, or needs parallel hardware                     Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 20
+   Spectrum of Associativity                                                            Associative Cache: Example
+
+      For a cache with 8 entries                                                          5-bit MM-address
+                                                                                        # cache blocks = 4, 1 word/block
+
+                                                                                            MM address requests: 0, 8, 0, 6, 8, 6
+                                                                                         Find the number of misses for the following three
+                                                                                       cache-architectures:
+                                                                                       (i)   direct-mapped           # misses = 5
+                                                                                       (ii)  2-way set-associative   # misses = 4
+                                                                                       (iii) fully-associative       # misses = 3
+
+
+
+                        Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 21
+
+
+
+
+Set-Associative Cache                          MM-address – 32 bits;                                                                                                 MM-address – 32 bits;
+                                                                                           Example 2:
+                                               Cache: 1 K block;                                                                                                     Cache: 2 K blocks;
+Organization: Example 1                        1 block = 1 word (32 bits)
+                                                                                           Set-Associative Cache                                                     1 block = 1 word (32 bits)
+Cache index = MM-address mod 256               4-way set-associative;                       Cache index = MM-address mod 1024                                        2-way set-associative;
+                                               # sets (# cache rows) =                                                                                               # sets (# cache rows) =
+                                               256, each set size = 4;
+                                                                                            31 30 29 28 27 ........... 17 16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0   1024, each set size = 2;
+                         2 (byte-offset)                                                              tag                                       index
+                                                                                                                                                                     write back
+                                               write through                                          20                                           10          2
+                                                                                                                    valid   tag d.b.    data      valid   tag d.b. data
+                                                        # tag-bits = 22                                            0
+                                                                                                                   1                                                         d.b.  (dirty-bit)
+                                                                                                                   2
+                                                                                                                  ...
+                                                                                                                  ...
+                                                       Associativity reduces                                      ...
+
+
+                                                       miss-rate (by reducing
+                                                       conflict misses), but may
+                                                                                                                  ...
+                                                       increase hit-time;                                       1021
+                                                                                                                1022
+                                                       Typical designs:                                         1023
+
+                                                       8-way set associative
+                                                                                                                            =                             =
+
+                                           Cache size                                  hit/miss                                                               Cache size
+                                           = (1 + 22 + 32)  4  256 bits                                                                                     = (1 + 1 + 20 + 32)  2  1024 bits
+Advantage?                                 = 55 K-bits                                                                                                        = 108 K-bits
+Replacement (Eviction) Policy                                                               Cache Performance: Example
+ Direct mapped: no choice                                                                     Given
+ Set associative                                                                                I-cache miss rate = 2%
+     Prefer non-valid entry, if there is one                                                    D-cache miss rate = 4%
+     Otherwise, choose among entries in the set                                                 Miss penalty = 100 cycles
+
+                                                                                                 Base CPI (ideal cache) = 2
+   Least-recently used (LRU)
+                                                                                                 Load & stores are 36% of instructions
+       Choose the one unused for the longest time
+            Simple for 2-way, manageable for 4-way, too hard                                  Miss cycles per instruction
+             beyond that                                                                         I-cache: 0.02 × 100 = 2
+   Random                                                                                       D-cache: 0.36 × 0.04 × 100 = 1.44
+       Gives approximately the same performance                                               Actual CPI = 2 + 2 + 1.44 = 5.44
+        as LRU for high-associativity
+                                                                                                   Ideal CPU is 5.44/2 =2.72 times faster
+
+                         Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 25                           Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 26
+
+
+
+
+Average Access Time                                                                     Cache: Key Points
+ Hit time is also important for performance
+                                                                                         Caches give illusion of a large, cheap memory with
+ Average memory access time (AMAT)                                                       the access time of a fast, expensive memory
+       AMAT = Hit time + (Miss rate × Miss penalty)                                     Caches take advantage of temporal locality and
+
+   Example                                                                               spatial locality
+                                                                                         Cache design presents many options (block size,
+     CPU with 1ns clock, hit time = 1 cycle, miss
+                                                                                          cache size, associativity) that an architect must
+      penalty = 20 cycles, I-cache miss rate = 5%
+                                                                                          combine to minimize miss rate and access time, so as
+     AMAT = 1 + 0.05 × 20 = 2ns                                                          to maximize performance
+            2 cycles per instruction
+
+
+
+                         Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 27
+

@@ -1,0 +1,95 @@
+\contentsline {section}{How to Use This Document to Pass the Exam}{5}{section*.2}%
+\contentsline {section}{Diagram Placeholders}{5}{section*.3}%
+\contentsline {section}{\numberline {1}Floating Point and Computer Arithmetic (Lectures 10--11)}{6}{section.1}%
+\contentsline {subsection}{\numberline {1.1}IEEE 754 Formats and Fields (L10, L11)}{6}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Exponent Bias, Encoding, and Special Exponents (L10, L11)}{6}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Normalized, Denormal, Zero, Infinity, and NaN (L10)}{7}{subsection.1.3}%
+\contentsline {subsection}{\numberline {1.4}Encoding and Decoding Procedure (L11)}{7}{subsection.1.4}%
+\contentsline {subsection}{\numberline {1.5}Floating-Point Addition and Subtraction Algorithm (L10, L11)}{8}{subsection.1.5}%
+\contentsline {subsection}{\numberline {1.6}Floating-Point Multiplication Algorithm (L10)}{8}{subsection.1.6}%
+\contentsline {subsection}{\numberline {1.7}Guard, Round, and Sticky Bits (L10)}{9}{subsection.1.7}%
+\contentsline {subsection}{\numberline {1.8}Floating-Point Division Overview (L11)}{9}{subsection.1.8}%
+\contentsline {subsection}{\numberline {1.9}Goldschmidt Division Method (L11)}{10}{subsection.1.9}%
+\contentsline {subsection}{\numberline {1.10}Newton-Raphson Division Method (L11)}{10}{subsection.1.10}%
+\contentsline {subsection}{\numberline {1.11}FP Hardware: Multi-Cycle and Pipelined Units (L10, L11)}{11}{subsection.1.11}%
+\contentsline {subsection}{\numberline {1.12}MIPS FPU Architecture (L10)}{11}{subsection.1.12}%
+\contentsline {subsection}{\numberline {1.13}MIPS FP Instructions and Data Movement (L10)}{12}{subsection.1.13}%
+\contentsline {subsection}{\numberline {1.14}FP Syscalls and Example (L10)}{12}{subsection.1.14}%
+\contentsline {subsection}{\numberline {1.15}Integer Multiplication Complexity (L10)}{13}{subsection.1.15}%
+\contentsline {section}{\numberline {2}Integer Arithmetic and ALU (Lectures 11--12)}{13}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Unsigned Shift-Add Multiplier (L12)}{13}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Signed Multiplication and Sign Handling (L12)}{14}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Booth's Encoding and Algorithm (L12)}{14}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Full Adder, Ripple-Carry Adder, and 2's Complement Subtraction (L11, L12)}{15}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Carry Lookahead Adder (CLA) (L11)}{15}{subsection.2.5}%
+\contentsline {subsection}{\numberline {2.6}Hybrid CLA/RCA Adders (L11)}{16}{subsection.2.6}%
+\contentsline {subsection}{\numberline {2.7}32-bit MIPS ALU Design (L12)}{16}{subsection.2.7}%
+\contentsline {subsection}{\numberline {2.8}Overflow Detection and SLT Support (L12)}{16}{subsection.2.8}%
+\contentsline {subsection}{\numberline {2.9}MIPS Instruction Execution Cycle (L12)}{17}{subsection.2.9}%
+\contentsline {subsection}{\numberline {2.10}Combinational vs Sequential Elements and Register File (L12)}{17}{subsection.2.10}%
+\contentsline {section}{\numberline {3}Processor Design: Single-Cycle MIPS (Lectures 13--14)}{18}{section.3}%
+\contentsline {subsection}{\numberline {3.1}ISA-Driven Datapath Design and Building Blocks (L13)}{18}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}R-Type Datapath (L13)}{19}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Load Datapath (L13)}{19}{subsection.3.3}%
+\contentsline {subsection}{\numberline {3.4}Store Datapath (L13)}{19}{subsection.3.4}%
+\contentsline {subsection}{\numberline {3.5}Branch Datapath (L13)}{20}{subsection.3.5}%
+\contentsline {subsection}{\numberline {3.6}Combining Datapaths with Multiplexers (L13)}{20}{subsection.3.6}%
+\contentsline {subsection}{\numberline {3.7}Control Signals for Single-Cycle MIPS (L14)}{21}{subsection.3.7}%
+\contentsline {subsection}{\numberline {3.8}ALU Control Logic (L14)}{21}{subsection.3.8}%
+\contentsline {subsection}{\numberline {3.9}Main Control Unit Design (L14)}{22}{subsection.3.9}%
+\contentsline {subsection}{\numberline {3.10}Jump Instruction Handling (L14)}{22}{subsection.3.10}%
+\contentsline {subsection}{\numberline {3.11}Critical Path and Performance Equation (L14)}{22}{subsection.3.11}%
+\contentsline {subsection}{\numberline {3.12}Logic Faults and Stuck-at Errors (L14)}{23}{subsection.3.12}%
+\contentsline {section}{\numberline {4}Pipelining and Hazards (Lectures 15--18)}{23}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Pipelining Basics: Throughput vs Latency (L15)}{23}{subsection.4.1}%
+\contentsline {subsection}{\numberline {4.2}MIPS 5-Stage Pipeline and Diagram (L15)}{24}{subsection.4.2}%
+\contentsline {subsection}{\numberline {4.3}Pipeline Terminology: Fill, Full, Drain, Balance (L15)}{24}{subsection.4.3}%
+\contentsline {subsection}{\numberline {4.4}Pipeline Registers and Overhead (L15, L16)}{25}{subsection.4.4}%
+\contentsline {subsection}{\numberline {4.5}Structural Hazards (L16)}{25}{subsection.4.5}%
+\contentsline {subsection}{\numberline {4.6}Data Hazards: RAW, WAR, WAW (L16, L17)}{26}{subsection.4.6}%
+\contentsline {subsection}{\numberline {4.7}Half-Cycle Register Write/Read Fix (L16)}{26}{subsection.4.7}%
+\contentsline {subsection}{\numberline {4.8}Load-Use Hazards and Bubbles (L16, L17)}{26}{subsection.4.8}%
+\contentsline {subsection}{\numberline {4.9}Forwarding (Bypassing) (L16, L17)}{27}{subsection.4.9}%
+\contentsline {subsection}{\numberline {4.10}Software Interlocking and Scheduling (L17)}{27}{subsection.4.10}%
+\contentsline {subsection}{\numberline {4.11}Control Hazards and Branch Penalty (L17, L18)}{28}{subsection.4.11}%
+\contentsline {subsection}{\numberline {4.12}Early Branch Resolution (L18)}{28}{subsection.4.12}%
+\contentsline {subsection}{\numberline {4.13}Branch Prediction (L18)}{29}{subsection.4.13}%
+\contentsline {subsection}{\numberline {4.14}1-bit vs 2-bit Predictors (L18)}{29}{subsection.4.14}%
+\contentsline {subsection}{\numberline {4.15}Delay Slots (L18)}{29}{subsection.4.15}%
+\contentsline {subsection}{\numberline {4.16}Pipeline Performance with Stalls (L18)}{30}{subsection.4.16}%
+\contentsline {section}{\numberline {5}Memory Hierarchy, Caches, and Virtual Memory (Lectures 18--20)}{30}{section.5}%
+\contentsline {subsection}{\numberline {5.1}Memory Hierarchy Levels and Tradeoffs (L18, L20)}{30}{subsection.5.1}%
+\contentsline {subsection}{\numberline {5.2}Principle of Locality (L18)}{31}{subsection.5.2}%
+\contentsline {subsection}{\numberline {5.3}Cache Basics: Hit, Miss, Block Size, I-Cache and D-Cache (L18)}{31}{subsection.5.3}%
+\contentsline {subsection}{\numberline {5.4}Direct-Mapped Cache Mapping, Tags, and Valid Bit (L18, L19)}{32}{subsection.5.4}%
+\contentsline {subsection}{\numberline {5.5}Direct-Mapped Cache Example (L18)}{32}{subsection.5.5}%
+\contentsline {subsection}{\numberline {5.6}Cache Miss Types (L19, L20)}{33}{subsection.5.6}%
+\contentsline {subsection}{\numberline {5.7}AMAT and AMSC Formulas (L19, L20)}{33}{subsection.5.7}%
+\contentsline {subsection}{\numberline {5.8}Cache Management Policies (L19, L20)}{33}{subsection.5.8}%
+\contentsline {subsection}{\numberline {5.9}Write-Through vs Write-Back and Dirty Bit (L19)}{34}{subsection.5.9}%
+\contentsline {subsection}{\numberline {5.10}Write-Allocate vs No-Write-Allocate (L19)}{34}{subsection.5.10}%
+\contentsline {subsection}{\numberline {5.11}Set-Associative and Fully Associative Caches (L19, L20)}{35}{subsection.5.11}%
+\contentsline {subsection}{\numberline {5.12}Replacement Policies (LRU, LFU, Random) (L19)}{35}{subsection.5.12}%
+\contentsline {subsection}{\numberline {5.13}Cache Performance Example (L19)}{36}{subsection.5.13}%
+\contentsline {subsection}{\numberline {5.14}Multiword Blocks, Critical Word First, Early Restart (L20)}{36}{subsection.5.14}%
+\contentsline {subsection}{\numberline {5.15}Cache Optimization Knobs (L20)}{36}{subsection.5.15}%
+\contentsline {subsection}{\numberline {5.16}Virtual Memory Basics (L20)}{37}{subsection.5.16}%
+\contentsline {subsection}{\numberline {5.17}Page Tables and PTE Fields (L20)}{37}{subsection.5.17}%
+\contentsline {subsection}{\numberline {5.18}Page Faults and Handler Steps (L20)}{38}{subsection.5.18}%
+\contentsline {subsection}{\numberline {5.19}Page Replacement and Reference Bits (L20)}{38}{subsection.5.19}%
+\contentsline {subsection}{\numberline {5.20}TLB and TLB Miss Handling (L20)}{39}{subsection.5.20}%
+\contentsline {section}{\numberline {A}MIPS Programming Guide (Lecture Notes-Compatible)}{39}{appendix.A}%
+\contentsline {subsection}{\numberline {A.1}Register File and Calling Convention}{39}{subsection.A.1}%
+\contentsline {subsection}{\numberline {A.2}Data Types, Directives, and Alignment}{40}{subsection.A.2}%
+\contentsline {subsection}{\numberline {A.3}Instruction Formats and Addressing Modes}{40}{subsection.A.3}%
+\contentsline {subsection}{\numberline {A.4}Arithmetic and Logical Operations}{40}{subsection.A.4}%
+\contentsline {subsection}{\numberline {A.5}Shifts and Bit Tricks}{41}{subsection.A.5}%
+\contentsline {subsection}{\numberline {A.6}Load/Store and Memory Access}{41}{subsection.A.6}%
+\contentsline {subsection}{\numberline {A.7}Branches and Jumps}{41}{subsection.A.7}%
+\contentsline {subsection}{\numberline {A.8}Functions and Stack Frames}{42}{subsection.A.8}%
+\contentsline {subsection}{\numberline {A.9}Syscalls (MARS/QtSPIM)}{42}{subsection.A.9}%
+\contentsline {subsection}{\numberline {A.10}Arrays and Loops}{43}{subsection.A.10}%
+\contentsline {subsection}{\numberline {A.11}Strings}{44}{subsection.A.11}%
+\contentsline {subsection}{\numberline {A.12}Multiply/Divide Instructions}{44}{subsection.A.12}%
+\contentsline {subsection}{\numberline {A.13}Floating-Point Programming}{44}{subsection.A.13}%
+\contentsline {subsection}{\numberline {A.14}Common Debugging Checklist}{45}{subsection.A.14}%

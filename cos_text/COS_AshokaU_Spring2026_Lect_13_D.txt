@@ -1,0 +1,450 @@
+    CS–2710-1                       Spring 2026                     How to design a processor?
+   Computer Organization and Systems (COS)
+                                                              Instruction Set Architecture       Basic Hardware Building
+                                                                    (ISA): Top-down                Blocks: Bottom-up
+    AI/ML
+    DS/NLP
+    Algo                  Lecture #13
+                         18 March 2026                       Design                      CPU
+                                                                                                                   Technological
+                                                             Rules
+                                                                                      Memory                       Constraints
+   CO        CA
+
+                   Ashoka University                   BBB
+
+
+
+
+                                                             Basic Building Blocks
+ Processor (CPU) Design: Begin from ISA
+                                                                •   AND-gate
+                                                                                            Adder             A
+                                                                                                                            Y
+                                                                     – Y=A&B                                           +
+                                                                                                Y=A+ B        B
+
+• We have studied CO-fundamentals, MIPS, and ALU                     A
+                                                                             Y
+  design. Now, we're ready to implement the MIPS “core”:             B
+
+                                                                                            Arithmetic/Logic Unit
+   – load-store instructions: lw, sw                               Multiplexer                 Y = F(A, B)
+   – reg-reg instructions: add, sub, and, or, slt
+   – control flow instructions: beq, j                                   M                          A
+                                                                         u   Y
+                                                                         x                               ALU   Y
+                                                                                                    B
+                                                                         S
+                                                                                                         F
+                 Binvert                   Operation
+
+
+                                                                  Implementing ALU
+                                       CarryIn
+
+
+  Control
+      a   lines (Bnegate 0Op1 Op0):                                                                                         A                          Basic Building Blocks
+                                                                                                                                      ALU          Y
+  000 = and
+                                                 1
+                                                                                                            2-bit
+                                                                         Bnegate   (1-bit)                  Operation
+                                                                                                                            B
+                                                       Result
+
+
+  001 = or   b    0
+
+                  1
+                                                 2
+
+                                                                                                                                                          • Register: stores data in a circuit
+  010 = add
+          Less                                   3
+                                                                                    a0
+                                                                                    b0
+                                                                                         CarryIn
+                                                                                          ALU0
+                                                                                                      Result0                         F
+                                                                                          Less
+                                                                                         CarryOut                                                           (a chain of D-FFs)
+  110 = subtract
+     a.                        CarryOut
+
+
+
+  111 = slt                                                                         a1   CarryIn
+                                                                                                                                                             – Uses a clock signal to determine when to update the
+                                                                                                      Result1
+                                                                                    b1
+                                                                                     0
+                                                                                          ALU1
+                                                                                          Less                                                                 stored value
+    (Bnegate) Binvert                      Operation                                     CarryOut                                           Zero
+
+                                                                                                                                                             – Edge-triggered: update when Clk changes from 0 to
+                                       CarryIn
+
+
+            a
+
+                                                                                                                                                               1
+                                                 0                                  a2   CarryIn      Result2
+                                                                                    b2    ALU2
+                                                 1                                   0    Less
+
+                                                       Result
+                                                                                         CarryOut
+                                                                                                                            output Zero becomes 1         D              Q                                  D                     Q
+            b     0
+
+                  1
+                                                 2
+                                                                                                                            when beq is taken;                 D-FF                                      Write
+          Less                                   3                                                                          PC needs to updated …        Clk                                              Clk
+                                                       Set                                           Result31
+                                                                                   a31    CarryIn
+                                                                                   b31    ALU31                  Set
+                           Overflow
+
+                                                                                                                                                                               • Register with write control
+                                                       Overflow                      0     Less                                             Overflow
+                           detection
+     b.
+
+
+
+                                                                                                                                                                                  – Only updates on clock edge when
+   This ALU implements MIPS add, sub, and, or, slt, and beq                                                                                                                         write control input is 1
+                                                                                                                                                                                  – Used when stored value is required later
+
+
+
+
+                                                                          MIPS has a 32 × 32-bit register file
+  Register File: Read                                                        Use for frequently accessed data                                          Register File: Write
+                                                                             Numbered 0 to 31
+    • Built using D flip-flops
+                                                                          Assembler names
+                                                                             $t0, $t1, …, $t9 for temporary values                                     • use the clock to determine when to write, provided
+Read register
+ number 1                                                                    $s0, $s1, …, $s7 for saved variables                                        Write is enabled
+                  Register 0
+                                                                                                                                                                                       Write
+                  Register 1                                 M
+                                                             u                                                                                                                                                   C
+                                                                  Read data 1                                                                                                                        0
+                                                                                                                                                                                                                     Register 0
+                 Register n – 1                              x                                                                                                                                       1           D
+                                                                                                    Read register
+                  Register n                                                                        number 1                  Read                                                              n-to-1           C
+                                                                                         5                                   data 1
+                                                                                                                                                                             Register number
+                                                                                                                                                                                               decoder               Register 1
+Read register
+ number 2
+                                                                                                    Read register                      32                                                         n– 1
+                                                                                                                                                                                                                 D
+
+                                                                                         5          number 2                                                                                         n
+                                                                                                            Register file
+                                                             M                                      Write
+                                                             u
+                                                             x
+                                                                  Read data 2            5          register
+                                                                                                                              Read                      add rd, rs, rt
+                                                                                                                                                                                                                 C
+                                                                                                                                                                                                                 Register n – 1
+                                                                                                                                                                                                                 D
+                                                                                                                             data 2
+                                                                                                    Write
+                                                                                                    data          Write
+                                                                                                                                       32                                                                        C
+
+                                                                                         32                                                                                    Register data                     D
+                                                                                                                                                                                                                     Register n
+
+
+
+                                                                                                                        1
+                       add rd, rs, rt
+   Simple Hardware Implementation of a CPU                                                                                                             MIPS Instruction Execution Cycle
+      • Functional units we need for implementing instructions
+32-bit
+      Instruction
+
+                                                        32-bit
+      address
+                                   32-bit          PC
+
+
+                                                                                                                                                              IF  ID/RR  EX  Mem  WB
+                     Instruction                                  Add Sum
+
+       Instruction
+         memory
+
+
+
+       a. Instruction memory                b. Program counter    c. Adder
+
+
+
+
+                                                                                                                                                            Access memory for load/store;
+                                                                                                         MemWrite
+                                                                        ALU control
+                5     Read
+                      register 1                32-bit            3
+
+
+  Register      5     Read
+                                        Read
+                                       data 1                                         32-bit Address          Read
+                                                                                                                     32-bit
+  numbers             register 2                                          Zero                                data             16             32
+                5     Write
+                             Registers
+                      register
+                                                        Data       ALU     ALU
+                                                                         result       32-bit Write       Data
+                                                                                                                                      Sign
+                                                                                                                                     extend                 PC  target address or PC + 4;
+                                        Read
+                                       data 2                                                 data      memory
+     Data             Write
+                      data                      32-bit
+             32-bit                 RegWrite
+                                                                                                         MemRead
+                                                                                                                                                            Fetch next instruction from memory address pointed by PC
+                            a. Registers                              b. ALU
+                                                                                               a. Data memory unit            b. Sign-extension unit
+
+
+
+
+   Control                                                     IF  ID/RR  EX  Mem  WB                                                                 Processor Design
+                                                                                                                                                          Single-Cycle MIPS Processor
+                                                                                                                                                                                             CCT
+                                                                                                                                                                                                               time
+
+                                                                                                                                                           IF       ID/RR  EX  Mem  WB
+
+
+
+
+                                                                                                                                                                  Multi-Cycle Processor (Pipelining)
+Instruction Fetch                                                                   MIPS Instruction Subset
+                                                                                              31         26          21         16         11             6            0
+                                                                   •   R-type                      op           rs         rt         rd        shamt         funct
+                                                                        – add rd, rs, rt           6 bits      5 bits     5 bits     5 bits      5 bits       6 bits
+                                                                        – sub, and, or, slt                   1. Read registers rs and rt
+                                                                                                              2. Feed them to ALU
+                                                                                                              3. Update register file
+
+                                                                                              31         26          21         16                                     0
+                                                                   •   LOAD and STORE
+                                                                                                   op           rs         rt               immediate
+                                                                                                   6 bits      5 bits     5 bits              16 bits
+                                                    Increment           – lw rt, rs, imm
+                                                                        – sw rt, rs, imm                      1. Read register rs (and rt for store)
+                                                   by 4 for next                                              2. Feed rs and immed to ALU
+                                                    instruction                                               3. Move data between mem and reg
+                                                                                              31         26          21         16                                     0
+ 32-bit                                                            •   BRANCH:                     op           rs         rt               displacement
+register                                                                – beq rs, rt, imm          6 bits      5 bits     5 bits               16 bits
+                                                                                                              1. Read registers rs and rt
+                                                                                                              2. Feed to ALU to compare
+                                                                                                              3. Add PC to disp; update PC
+
+
+
+
+  Processor Design                                                     R-Format Instructions
+• Generic Implementation:
+                                                                        Read two register operands
+   – all instructions read some registers
+   – all instructions use the ALU after reading registers               Perform arithmetic/logical operation
+   – memory accessed & registers updated after ALU
+                                                                        Write register result
+• Suggests basic design:
+                                                                                                                                           3
+Datapath for Reg-Reg Operations                                                                               Load/Store Instructions
+ • R[rd] <- R[rs] op R[rt]        Example: add rd, rs, rt
+    – ID’s of three registers obtained from rs, rt, and rd fields of                                           Read register operands
+      the instruction (two sources and one destination)
+                                                                                                               Calculate address using 16-bit offset
+    – ALU-operation signal depends on op and funct
+                                                                                                                          Use ALU, but sign-extend offset
+          31            26            21            16            11               6            0
+               op             rs            rt            rd             shamt         funct                     Load: Read memory and update register
+               6 bits        5 bits        5 bits        5 bits           5 bits       6 bits                    Store: Write register value to memory
+
+
+                                                                       Read contents of rs and rt;
+                                                                       Pass the two operands to ALU;
+                                                                       Enable addition;
+                                                                       Select destination-register rd;
+                                                                       Enable RegWrite;
+                                                                       Transfer result from ALU to rd;
+                                                                       In single-cycle processor
+                                                                       implementation, all actions are
+                                                                       completed in one clock cycle;
+
+
+
+
+Datapath for Load Operations Read contents of rs                                                         Datapath for Store Operations
+                                           Pass (rs) and sign-ext (imm) to                                                                                  Read contents of rs
+                                           ALU; lw rt, rs, imm16
+ R[rt] <- Mem[R[rs] + SignExt[imm16]] Example:                                                                Mem[R[rs] + SignExt[imm16]] <- R[rt] Pass
+                                                                                                                                                    Example:   sw
+                                                                                                                                                        (rs) and     rt, rs,
+                                                                                                                                                                 sign-ext    imm16
+                                                                                                                                                                          (imm) to ALU;
+                                           Enable addition to compute                                                                                        Enable addition   to compute address;
+31       26       21       16                   0
+                                           address;                                                      31        26            21        16                         0
+                                                                                                                                                             Select and read dest register rt
+   op        rs       rt      immediate    Select dest register rt                                            op             rs        rt       immediate
+                                                                                                                                                             Enable MemWrite
+   6 bits   5 bits   5 bits        16 bits Enable MemRead                                                     6 bits        5 bits    5 bits         16 bits
+                                                                                                                                                             Transfer (rt) to Mem location pointed
+                                           Read memory location pointed                                                                                      by the computed address
+                                           by the computed address;
+                                           Transfer data from Mem to rt;
+Combining datapaths                                       Combining datapaths
+• How do we allow different datapaths for different       • How do we allow different datapaths for different instructions?
+  instructions?                                           • Use a multiplexor!
+
+
+
+
+                                                                                               ALUscr (ALU second-input control)
+
+
+
+               R-type                          Store
+
+
+
+
+ Branch Instructions                                    Datapath for Branch Operations,,Read contents of rs and rt;
+                                                                                       Compare them in ALU, by
+                                                                                                                    enabling ALU-op;
+                                                          beq       rs, rt, imm16                   We need to compare
+                                                                                                               Read imm rs
+                                                                                                                        andand  rt
+                                                                                                                            sign-extend;
+  Read register operands                                31         26         21         16
+                                                                                                                    Shift-left
+                                                                                                                        0
+                                                                                                                               by 2-bits to compute
+                                                                                                                    word-offset;
+  Compare operands
+                                                              op          rs         rt         immediate
+                                                                                                                    Add it with (PC+4) to compute
+                                                              6 bits     5 bits     5 bits           16 bits
+                                                                                                                    target ddress;
+        Use ALU, subtract and check Zero output
+    Calculate target address
+      Sign-extend displacement
+      Shift left 2 places (word displacement)
+
+      Add to PC + 4
+
+             Already calculated by instruction fetch                                                                    Brach control logic
+                                                                                                                         determines the choice
+                                                                                                                         between two possible
+                                                                                                                         target-addresses
+Branch Instructions             Composing the Elements
+                                   First-cut data path does an instruction in
+    Just
+ re-routes                          one clock cycle
+   wires
+                                     Each datapath element can only do one
+                                      function at a time
+                                     Hence, we need separate instruction and data
+
+                                      memories
+                                   Use multiplexers where alternate data
+                                    sources are used for different instructions
+
+                Sign-bit wire
+                 replicated
+
+
+
+
+R-Type/Load/Store Datapath      Full Datapath
+All together: the single cycle datapath                               The R-Format (e.g. add) Datapath
+
+
+
+
+                                                       Need Control Signals: ALUsrc = 1, ALUop =“add”, MemRead = 0,
+                                                       MemWrite = 0, MemToReg = 0, RegDst = 0, RegWrite = 1, and PCsrc = 1.
+
+
+
+
+                    The Load Datapath                               The Store Datapath
+
+
+
+
+          What control signals do we need for load??
+The beq Datapath   Control Signal Requirement
+                                                                                                                                                                  0
+                                                                                                                                                                  M
+                                                                                                                                                                  u
+                                                                                                                                                                  x
+                                                                                                                                                   ALU
+                                                                                                                                             Add result           1
+                                           Add                                                                                    Shift
+                                                                                               RegDst                            left 2
+                                 4                                                             Branch
+                                                                                               MemRead
+                                                             Instruction [31– 26]              MemtoReg
+                                                                                    Control    ALUOp
+                                                                                               MemWrite
+                                                                                               ALUSrc
+                                                                                               RegWrite
+
+                                                             Instruction [25– 21]               Read
+                            PC   Read                                                           register 1
+                                 address                                                                         Read
+                                                             Instruction [20– 16]               Read            data 1
+                                                                                                register 2                                       Zero
+                                               Instruction                          0                  Registers Read
+                                                   [31– 0]                                                                                   ALU ALU
+                                                                                    M           Write           data 2            0                       Address         Read
+                                                                                                                                                result                    data   1
+                                 Instruction                                        u           register                          M
+                                                                                                                                   u                                             M
+                                   memory                    Instruction [15– 11]   x                                                                                             u
+                                                                                    1           Write                              x                                   Data
+                                                                                                data                                                                              x
+                                                                                                                                  1                                   memory     0
+                                                                                                                                                          Write
+                                                                                                                                                          data
+
+                                                             Instruction [15– 0]                             16             32
+                                                                                                                    Sign
+                                                                                                                   extend           ALU
+                                                                                                                                   control
+
+                                                                                              Instruction [5– 0]
+
+
+
+
+                                                                                   Memto- Reg Mem Mem
+                       Instruction RegDst ALUSrc                                    Reg   Write Read Write Branch ALUOp1 ALUp0
+                      R-format       1      0                                        0     1     0    0       0      1     0
+                      lw             0      1                                        1     1     1    0       0      0     0
+                      sw             X      1                                        X     0     0    1       0      0     0
+                      beq            X      0                                        X     0     0    0       1      0     1
+

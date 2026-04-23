@@ -1,0 +1,525 @@
+    CS–2710-1                       Spring 2026                     How to design a processor?
+   Computer Organization and Systems (COS)
+                                                              Instruction Set Architecture       Basic Hardware Building
+                                                                    (ISA): Top-down                Blocks: Bottom-up
+    AI/ML
+    DS/NLP
+    Algo                  Lecture #14
+                         25 March 2026                       Design                      CPU
+                                                                                                                   Technological
+                                                             Rules
+                                                                                      Memory                       Constraints
+   CO        CA
+
+                   Ashoka University                   BBB
+
+
+
+
+                                                             Basic Building Blocks
+ Processor (CPU) Design: Begin from ISA
+                                                                •   AND-gate
+                                                                                            Adder             A
+                                                                                                                            Y
+                                                                     – Y=A&B                                           +
+                                                                                                Y=A+ B        B
+
+• We have studied CO-fundamentals, MIPS, and ALU                     A
+                                                                             Y
+  design. Now, we're ready to implement the MIPS “core”:             B
+
+                                                                                            Arithmetic/Logic Unit
+   – load-store instructions: lw, sw                               Multiplexer                 Y = F(A, B)
+   – reg-reg instructions: add, sub, and, or, slt
+   – control flow instructions: beq, j                                   M                          A
+                                                                         u   Y
+                                                                         x                               ALU   Y
+                                                                                                    B
+                                                                         S
+                                                                                                         F
+Control Signal Requirement
+                                                                                                                                                                      How to design the control unit?
+                                                                                                                                                  0
+                                                                                                                                                  M
+
+
+                                                                                                                                                                       • Input:
+                                                                                                                                                  u
+                                                                                                                                                  x
+                                                                                                                                   ALU
+                                                                                                                             Add result           1
+                          Add                                                                                     Shift
+                                                                                                                 left 2
+
+
+                                                                                                                                                                           --- Op-code and function-field bits from
+                                                                              RegDst
+                4                                                             Branch
+                                                                              MemRead
+                                            Instruction [31– 26]              MemtoReg
+                                                                   Control    ALUOp
+
+
+
+                                                                                                                                                                               instructions
+                                                                              MemWrite
+                                                                              ALUSrc
+                                                                              RegWrite
+
+                                            Instruction [25– 21]               Read
+          PC    Read                                                           register 1
+                address                                                                         Read
+                                            Instruction [20– 16]               Read            data 1
+                                                                               register 2                                        Zero
+                              Instruction                          0                  Registers Read
+                                  [31– 0]                                                                                    ALU ALU
+                                                                   M           Write           data 2             0                       Address         Read
+                                                                                                                                result                    data   1
+                Instruction                                        u           register                           M
+
+
+                                                                                                                                                                       • Output:
+                                                                                                                   u                                             M
+                  memory                    Instruction [15– 11]   x                                                                                              u
+                                                                   1           Write                               x                                   Data
+                                                                               data                                                                               x
+                                                                                                                  1                                   memory     0
+                                                                                                                                          Write
+                                                                                                                                          data
+
+
+
+                                                                                                                                                                          --- Desired control signals needed during the
+                                            Instruction [15– 0]                             16             32
+                                                                                                   Sign
+                                                                                                  extend            ALU
+                                                                                                                   control
+
+                                                                             Instruction [5– 0]
+
+
+
+                                                                                                                                                                              execution of an instruction
+                                                                  Memto- Reg Mem Mem
+     Instruction RegDst ALUSrc                                     Reg   Write Read Write Branch ALUOp1 ALUp0
+    R-format
+    lw
+                   1
+                   0
+                          0
+                          1
+                                                                    0
+                                                                    1
+                                                                          1
+                                                                          1
+                                                                                0
+                                                                                1
+                                                                                     0
+                                                                                     0
+                                                                                             0
+                                                                                             0
+                                                                                                    1
+                                                                                                    0
+                                                                                                          0
+                                                                                                          0                                                            • For single-cycle implementation, the controller
+    sw
+    beq
+                   X
+                   X
+                          1
+                          0
+                                                                    X
+                                                                    X
+                                                                          0
+                                                                          0
+                                                                                0
+                                                                                0
+                                                                                     1
+                                                                                     0
+                                                                                             0
+                                                                                             1
+                                                                                                    0
+                                                                                                    0
+                                                                                                          0
+                                                                                                          1
+                                                                                                                                                                         can be designed by a combinational circuit
+
+
+
+
+                                                                                                                                                                                   Binvert                   Operation
+
+
+                                                                                                                                                                                                                                    Implementing ALU
+                                                                                                                                                                                                         CarryIn
+
+
+
+Control                                                                                                                                                               Control
+                                                                                                                                                                          a   lines (Bnegate 0Op1 Op0):                                                                            A
+                                                                                                                                                                                                                                                                                          ALU          Y
+                                                                                                                                                                      000 = and
+                                                                                                                                                                                                                   1
+                                                                                                                                                                                                                                                                        2-bit
+                                                                                                                                                                                                                                      Bnegate   (1-bit)                Operation
+                                                                                                                                                                                                                                                                                   B
+                                                                                                                                                                                                                         Result
+
+
+
+•   Selecting the operations to perform (ALU, read/write, etc.)                                                                                                       001 = or b    0
+
+                                                                                                                                                                                    1
+                                                                                                                                                                                                                   2
+
+
+
+
+                                                                                                                                                                      010 = add
+                                                                                                                                                                            Less                                   3
+                                                                                                                                                                                                                                                 a0
+                                                                                                                                                                                                                                                 b0
+                                                                                                                                                                                                                                                      CarryIn
+                                                                                                                                                                                                                                                       ALU0
+                                                                                                                                                                                                                                                                 Result0                   F
+•   Controlling the flow of data (multiplexor inputs)                                                                                                                                                                                                  Less
+                                                                                                                                                                                                                                                      CarryOut
+
+•   Information comes from the 32 bits of the instruction
+                                                                                                                                                                      110 = subtract
+                                                                                                                                                                       a.                        CarryOut
+
+
+
+                                                                                                                                                                      111 = slt                                                                  a1   CarryIn    Result1
+•   Example:                                                                                                                                                                                                                                     b1
+                                                                                                                                                                                                                                                  0
+                                                                                                                                                                                                                                                       ALU1
+                                                                                                                                                                                                                                                       Less
+                                                                                                                                                                       (Bnegate)   Binvert                   Operation
+                                                                                                                                                                                                         CarryIn
+                                                                                                                                                                                                                                                      CarryOut                                  Zero
+
+
+
+          add $8, $17, $18                                                     Instruction Format:                                                                            a
+                                                                                                                                                                                                                   0                             a2   CarryIn    Result2
+                                                                                                                                                                                                                                                 b2    ALU2
+                                                                                                                                                                                                                   1                              0    Less
+
+         000000                  10001                 10010                       01000                        00000 100000                                                                                             Result
+                                                                                                                                                                                                                                                      CarryOut
+                                                                                                                                                                                                                                                                                   output Zero becomes 1
+                                                                                                                                                                              b     0
+
+                                                                                                                                                                                    1
+                                                                                                                                                                                                                   2
+                                                                                                                                                                                                                                                                                   when beq is taken;
+               op                     rs                   rt                           rd                      shamt               funct
+                                                                                                                                                                            Less                                   3                                                               PC needs to updated …
+                                                                                                                                                                                                                         Set                                     Result31
+                                                                                                                                                                                                                                                a31   CarryIn
+                                                                                                                                                                                                                                                b31   ALU31                 Set
+                                                                                                                                                                                             Overflow
+                                                                                                                                                                                                                         Overflow                 0    Less                                     Overflow
+                                                                                                                                                                                             detection
+
+•   ALU's operation based on instruction type and function code                                                                                                        b.
+
+
+
+
+                                                                                                                                                                      This ALU implements MIPS add, sub, and, or, slt, and beq
+                                                                                     §4.4 A Simple Implementation Scheme
+ALU Control                                                                                                                   ALU Control
+   ALU used for                                                 A                                                                 Assume 2-bit ALUOp derived from opcode
+                                                                        ALU     Y
+     Load/Store: F = add                                                                                                                   Combinational logic derives ALU control
+                                                                 B
+     Branch: F = subtract
+                                                                        F
+                                                                                                                               opcode                ALUOp             Operation                          funct   ALU function              ALU control
+     R-type: F depends on funct field                                                                                         lw                         00           load word                      XXXXXX      add                             010
+                                                                                                                               sw                         00           store word                     XXXXXX      add                             010
+          ALU control (F)                    Function
+                                                                                                                               beq                        01           branch equal                   XXXXXX      subtract                        110
+                  000                          AND                                                                             R-type                     10           add                            100000      add                             010
+                  001                           OR                                                                                                                     subtract                       100010      subtract                        110
+                  010                           add                                                                                                                    AND                            100100      AND                             000
+                  110                         subtract                                                                                                                 OR                             100101      OR                              001
+                  111                     set-on-less-than                                                                                                             set-on-less-than               101010      set-on-less-than                111
+
+
+                                                                                                                                                                      Inputs to                                                outputs of
+                                                                                                                                                                      control logic                                            ALU control logic
+
+
+
+
+                                                                                                                                                                                                                               Control Block Design
+The Main Control Unit                                                                                                                                                                                                      •  Simple combinational logic
+                                                                                                                                                                                                                           •  Inputs: Op-code and
+   Control signals derived from instruction                                                                                                                                                                                Function-field of Instructions
+                                                                                                                                                                                                                           Outputs: Desired control signals
+
+R-type      0             rs       rt          rd         shamt         funct
+          31:26          25:21    20:16       15:11        10:6          5:0                                                                                                                                      Inputs
+                                                                                                                                                                                                                   Op5
+                                                                                                                                                                                                                   Op4
+                                                                                                                                                                                                                                                   Main
+Load/
+Store
+         35 or 43         rs       rt                     address                                                                                 ALUOp
+                                                                                                                                                                                                                   Op3
+                                                                                                                                                                                                                   Op2                             control
+                                                                                                                                                                                           A
+          31:26          25:21    20:16                         15:0                                                       ALU                      ALUOp0
+                                                                                                                                                             ALU control block
+                                                                                                                                                                                                      ALU    Y
+                                                                                                                                                                                                                   Op1
+                                                                                                                                                                                                                   Op0                             logic
+                                                                                                                           control                  ALUOp1                                 B
+
+Branch      4             rs       rt                     address                                                          logic             F3
+                                                                                                                                                                             Operation2               F
+                                                                                                                                                                                                                     R-format     Iw   sw   beq
+                                                                                                                                                                                                                                                        Outputs
+
+                                                                                                                                                                                                                                                        RegDst
+                                                                                                                                                                                          Operation
+                                                                                                                                             F2
+          31:26          25:21    20:16                         15:0                                                              F (5– 0)
+                                                                                                                                                                             Operation1                                                                 ALUSrc
+                                                                                                                                             F1                                                                                                         MemtoReg
+                                                                                                                                                                             Operation0
+                                                                                                                                             F0                                                                                                         RegWrite
+                                                                                                                                                                                                                                                        MemRead
+
+         opcode         always     read,            write for          sign-extend                                                                                                                                                                      MemWrite
+
+
+                         read     except             R-type              and add                                                                                                                                                                        Branch
+                                                                                                                                                                                                                                                        ALUOp1
+
+                                 for load           and load                                                                                                                                                                                            ALUOpO
+Datapath With Control   R-Type Instruction
+
+
+
+
+Load Instruction        Branch-on-Equal Instruction
+                                                     MIPS Processor for implementing
+Implementing Jumps                                  Datapath
+                                                    lw, sw, add, sub,with   “Jumps”
+                                                                      addi, subi,            Added
+                                                                                  and, or, slt, beq, j
+
+Jump         2                  address
+           31:26                  25:0
+
+
+ Jump uses word address
+ Update PC with concatenation of
+
+     Top 4 bits of old PC
+     26-bit jump address
+
+     Least significant two bits: 00
+
+   Need an extra control signal decoded from
+                                                   concatenation
+    op-code                                        hardware
+
+
+
+
+Performance Issues                                                       Key Points
+
+   Longest delay determines clock period          • CPU is just a collection of state and combinational logic
+
+     Critical path: load instruction
+                                                   • We have just designed a processor, at least in terms of
+     Instruction memory  register file  ALU      functionality
+      data memory  register file
+ Not feasible to vary period for different        • CPU time = IC * CPI * CCT
+  instructions                                        – single-cycle machine has limited performance
+                                                      – Needs improved techniques such as pipelining
+ Violates design principle
+
+       Making the common case fast
+   We will improve performance by pipelining
+                                                          In MIPS, programs typically start
+Logic Faults in MIPS Processor at memory address 0x00400000                                           Processor Design
+                                                                     LSB is stuck-at 1 (f3)
+
+                                                                                                      Single-Cycle Processor
+                                                     32
+                                                                      In the presence of f1:                                        CCT
+                                                                      ADD, SUB, AND, OR,
+                                                                      SLT 
+
+                                                                      BEQ, JUMP 
+
+                                       stuck-at 1                     ADDI, SUBI,
+                                                                                                        IF         ID/RR  EX  Mem  WB
+                                        fault (f2)                    LW, SW 
+
+                                                                      In the presence of f2: ?
+
+
+                                                                      In the presence of f3: ?
+                                                                      Catastrophic! Why?
+Defects:
+Suppose some signal
+lines experience
+logical stuck-at faults
+               stuck-at 0 fault (f1)
+                                                                                                                                            Chapter 4 — The Processor — 22
+
+
+
+
+                                                                                                 Complete View of Computer Architecture   Memory transaction is inherently
+                                                                                                                                          slow compared to logic
+
+                                                                                                   Use of memory hierarchy
+                                                                                                   reduces the transaction time      Cache Memory        speed,
+                                                                                                   across CPU-memory interface
+                                                                                                                                     (SRAM)              cost        +
+     Single-Cycle Processor Design
+                                                                                                        Control        Datapath      Main Memory           storage
+                                                                                                                        ALU          (DRAM)               capacity
+                                                                                                                                                                     +
+                                                                                                      Registers    On-chip cache    Secondary Memory (Flash,
+     What are the design-characteristics/                                                                                           Hard disk, SSD, CD)
+     consequences of having “single-cycle”                                                           Processor (CPU)
+
+     based processor?                                                                                                               Tertiary Memory (Tape,
+                                                                                                                                    RAID, Networks, Cloud)
+
+
+                                                                                                 Consequences of having                         Memory
+                                                          Chapter 4 — The Processor — 23         single-cycle processor design?
+                    Description
+      Job: Manufacture n cars or
+      locomotive engines                                            The concept of pipelining is very old
+     Naïve Approach: Engage all
+     labor and machinery to finish                                  It had been in practice in industrial
+     building one car, and proceed to                               assembly-lines (e.g., automobiles) for
+                                           Courtesy: Satyajit Ray
+     produce the next;
+                                                                    a long time
+    Single-Cycle Processor: Finish executing one instruction and
+    proceed to the next …
+                                 CCT
+
+
+     IF       ID/RR EX  Mem  WB
+                                                                                                    Chapter 4 — The Processor — 26
+
+
+
+
+         Bag transportation via human chain                         Processor Design
+                                                                    Single-Cycle Processor
+
+
+
+                                                                     IF      ID/RR EX  Mem  WB
+
+
+
+
+                              k workers                                     Multi-Cycle Processor
+
+
+                                                                                                    Chapter 4 — The Processor — 28
+ACMU 2008-09
+        Description: Assembly Line                                                                            What is Pipelining
+    Job: Manufacture n cars or locomotive engines
+                                                                                            • Laundry Room
+    Pipelined Approach: Divide, Forward, and Conquer
+                                                                                            • Four students A, B, C, D
+                                                                                              each has one load of clothes           A   B        C    D
+    Multiple phases are needed to                                                             to wash, dry, and fold
+    complete production;
+                                                                                            • Washer takes 30 minutes
+    Each phase needs specific expertise/
+    instruments/time
+                                                                                            • Dryer takes 40 minutes
+    Goal: How to optimize the total completion
+    time (cost) for producing n cars                                                        • Folder takes 20 minutes
+
+                                                       Chapter 4 — The Processor — 29                                                                      30
+
+
+
+
+          What Is Pipelining: Laundry Example                                                       Basic Idea of Pipelining
+          6 PM     7         8        9                     11     Midnight
+                                                                                                    Minimize idle-time for resources
+                                               10
+                                   Time (in minutes)                                               6 PM      7           8     9    10       11       Midnight
+                                                                                                                             Time
+            30 40 20 30 40 20 30 40 20 30 40 20
+T
+a     A                                                                                              30 40 40 40 40 20
+                                                                                        T
+s
+                                              Washer is idle                            a       A                   • Pipelined laundry takes 3.5
+k
+      B                                                                                 s                             hours for 4 loads
+O                                                                                       k                           • Speed-up = 6/3.5 = 1.714
+r           washing 30 mins                                                                     B
+d     C                                                                                 O
+            drying 40 mins                                                              r
+e
+r
+            folding 20 mins                                                             d      C
+      D     Total: 90 mins                                                              e
+                                                                                        r
+Sequential laundry takes 6 hours for four users; Work finishes at 00:00                        D
+If they learned pipelining, how long would laundry take?                                            multiple resources
+                                                                 Only one resource
+                                                                                                    overlapped in time
+                                                                 is busy at a 31
+                                                                              time                                                                         32
+           Impact of Pipeline Stages                                                    Pipelining Lessons
+         6 PM     7      8         9         10      11   Midnight                                     • Pipelining doesn’t help
+                                                                                 6 PM   7   8     9      latency of single task, it helps
+                                 Time                                                                    throughput of entire workload
+                                                                                                Time
+                                                                                                       • Pipeline rate limited by
+           30 40 20                     • Q1. What is the time           T                               slowest pipeline stage
+T                                                                        a         30 40 40 40 40 20
+a      A                40                difference between two         s
+                                                                                                       • Multiple tasks operating
+                                                                             A                           simultaneously
+s                                         consecutive finish-times?      k
+                                                                                                       • Potential speed-up < Number
+k
+                                        • time required to move an       O                               pipe stages (pipe-depth)
+       B
+O                                         instruction one step forward   r   B                         • Unbalanced lengths of pipe
+r Q2. What is the maximum                                                d                               stages reduces speed-up
+d
+                                        •  longest time (slowest)       e                             • Time to “fill” pipeline and time
+e speed-up compared to                    among pipe-stages              r   C                           to “drain” it reduces speedup
+r non-pipelined approach??                                                                             • Stall for Dependences
+                                   • Speed-up when n                       D
+     limited by the number of        90/40 = 2.25
+    pipe-stages
+                                     < 3 (number of pipe-stages)
+                                                           33                                                                     34
+
+
+
+
+Learned So Far ….
+ Pipelining is widely used in modern
+  processors.
+ Pipelining improves system performance in
+  terms of throughput.
+ Pipelined organization requires sophisticated
+  compilation techniques.
+

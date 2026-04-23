@@ -1,0 +1,428 @@
+CS–2710-1                     Spring 2026              MIPS Pipeline
+Computer Organization and Systems (COS)               • Pipeline registers (latches) are inserted between two consecutive pipeline
+                                                        stages
+                                                      • All the registers are synchronized with the system clock and seamlessly
+                                                        transfer instruction-bits and other intermediate data forward, across
+AI/ML                                                   consecutive pipeline stages
+DS/LLM                Lecture #16
+                      04 April 2026
+                                                                                 ID/
+                                                               IF                                        EX                 Mem                 WB
+                                                                                 RR
+CO       CA
+                                                             Instruct 5      Instruct 4                Instruct 3       Instruct 2           Instruct 1
+
+                 Ashoka University              BBB                          Status during the fifth clock pulse
+
+
+
+
+Data Hazards: Review                                         Example: Hazards due to Register File Access
+                                                                                                 Time (clock cycles)
+ Data hazards may occur when we have:
+                                                              Inst 0
+                                                      add $t1,$t3,$t4 IF                                Mem    WB
+
+
+
+
+                                                                                                EX
+ instruction A                                                                           ID/R                               $t1: destination register
+
+                                                         I
+  followed by                                                 Inst 1                     IF                    Mem     WB
+
+
+
+
+                                                                                                         EX
+                                                        n                                       ID/R
+                                                        s
+                                                         t
+ instruction B                                                Inst 2                            IF                    Mem     WB
+
+
+
+
+                                                                                                               EX
+                                                        r.                                              ID/R
+
+ and                                                    O
+                                                              add $t2,$t1,$t5                            IF                   Mem      WB
+
+
+
+
+                                                                                                                       EX
+                                                        r                                                      ID/R
+                                                        d
+ B wants to manipulate data (read/write) before A       e
+                                                                  $t1: source register
+ finishes  data hazard                                 r
+
+
+ Unless the pipeline halts or it takes some other
+ corrective measure, computation will be erroneous
+     Solution: Register Write-Read Hazard?
+                               Time (clock cycles)                                           Example: Half-Cycle Register Read/Write
+                                                                                                     (to mitigate data hazard)
+                                                           Fix register access
+     add $t1, IF                     Mem    WB                hazard by doing
+
+
+
+
+                              EX
+                       ID/R
+I
+n
+                                                             writes in the first   add $t1,$t3,$t4
+s                                                            half and reads in
+     Inst 1            IF                   Mem    WB      the second half of      lw …
+
+
+
+
+                                     EX
+t                             ID/R
+r.                                                              the clock cycle    sw …
+                                                                                   add $t2,$t1,$t5
+O Inst 2                      IF                   Mem    WB
+
+
+
+
+                                            EX
+                                     ID/R
+r
+d                                                                                      Hardware solution:
+                                     IF                   Mem   WB
+                                                                                       Perform register writes in the first half of the clock
+
+
+
+
+                                                     EX
+e add $t2,$t1,$t3                           ID/R
+r
+      Half-cycle R/W                                                                   cycle;
+      solution!                                                                        Then a read for the same register (holding the
+                                             clock edge that initiates
+                                                                                       updated data) for a subsequent instruction, can be
+         clock edge that triggers
+         register writing to
+                                             loading/reading of                        made in the second half of the same clock cycle;
+                                             pipeline state registers
+         destination registers
+
+
+
+
+                                                                                                                          lw $t2, 0($t1)
+       Illustration:
+                                                                                          IF for Load …
+                                                                                                      Information about the previous instruction that
+                                                                                                                            entered into the pipeline is being written into the
+                                                                                                                            IF/ID-latches in the first half of the first clock cycle,
+       How lw instruction is executed in MIPS five-stage                                                                    to be processed in the ID/RR-stage
+       pipeline
+
+
+
+              IF      ID/RR  EX  Mem  WB
+
+
+
+
+                                                                                   IM is read to retrieve the current lw instruction,
+                                                                                   in the second-half of the first clock cycle, and
+                                                                                                                                                        Chapter 4 — The Processor — 8
+                                                                                   put into a buffer
+                                                                                                      Address(Mem) = {0 + ($t1)}
+ ID/RR for Load…                                             EX for Load             lw $t2, 0($t1) is copied in the EX/MEM
+                                                                                                      latches along with IDs of
+                                                                                                      $t2, $t1, in the third clock
+                        lw $t2, 0($t1)                                                                cycle
+
+
+
+
+                             Chapter 4 — The Processor — 9                                          Chapter 4 — The Processor — 10
+
+
+
+
+                                                                                                      In the fifth clock cycle, data is
+MEM for Load           Mem(0 + $t1) is copied in the
+                       MEM/WB latches along with IDs of
+                                                             WB for Load lw $t2, 0($t1) written to the destination
+                                                                                        register $t2 (both the data and
+                       $t2, $t1;                                                                      the ID of $t2 are provided by
+                                                                                                      the MEM/WB latches
+      lw $t2, 0($t1)
+
+
+
+
+                            Chapter 4 — The Processor — 11                                          Chapter 4 — The Processor — 12
+Corrected Datapath for Load                                               Mitigation of Data Hazards
+                                                                                                                                              $s0 updated in the
+                                                                                                                                              5th clock cycle;
+
+
+
+                                                                                                     ID/RR
+                                                                                                                   ID/RR
+
+
+                                                                                                          half-cycle $s0 read request in 3rd clock cycle
+                                                                        Solution                          read/write
+
+  Correct                                                                                  ID/RR
+  Dest. Register Id                                                                                                                  ID/RR
+                                                                                   reduces one stall               IF        ID/RR     EX     MEM      WB
+                                                                                                    Bubble (Stall): Pipeline interlocking
+                                     Chapter 4 — The Processor — 13
+                                                                                                    CPU-time increases; Can we do better??
+
+
+
+
+                                                                      Data Hazard Example: Write/Read problem in a register
+Pipelining: Data Hazards
+                                                                          Dependencies that are backward in time, cause hazards
+                                                                                                                                                             time
+                                                                           Clock Cycle                1       2         3       4       5     6        7       8       9
+
+                                                                        add $t1,$t2,$t3              IF                        Mem     WB
+
+
+
+
+                                                                                                                        EX
+                                                                                                             ID/R                                 $t1: destination register
+• A hazard refers to the possibility of erroneous
+  execution of an instruction in a pipeline                             sub $t4,$t1,$t5                       IF                       Mem    WB
+
+
+
+
+                                                                                                                                EX
+                                                                                                                        ID/R
+                                                                             $t1: source register
+
+• A data hazard represents the possibility of erroneous                 and $t6,$t1,$t7                                 IF                    Mem      WB
+
+
+
+
+                                                                                                                                        EX
+                                                                                                                                ID/R
+
+  execution because of the unavailability of correct data
+                                                                         or $t8,$t1,$t9                                         IF                    Mem      WB
+
+
+
+
+                                                                                                                                              EX
+                                                                                                                                       ID/R
+
+                                                                            $1: source register                Right push by
+                                                                                                               two clock cycles        IF                     Mem      WB
+
+
+
+
+                                                                                                                                                       EX
+                                                                                                                                              ID/R
+                                                                         xor $t4,$t1,$t5
+
+                                                                        Read-after-write (RAW) data hazard (trying to read before write is completed)
+                                                                        How many bubbles (stalls) are needed to resolve this hazard?                   Two bubbles!
+          Loads Can Cause Data Hazards                                                                       Data Hazards (contd..)
+           Dependencies backward in time cause hazards
+
+           Clock Cycle           1     2      3           4           5     6         7     8     9             An instruction depends on completion of
+          lw $t1,4($t2) IF                            Mem             WB                                         data access by a previous instruction
+
+
+
+
+                                              EX
+                                      ID/R
+ I
+n
+s
+                                                                                                                     add           $s0, $t0, $t1
+          sub $t4,$t1,$t5             IF                          Mem       WB
+
+
+
+
+                                                          EX
+                                              ID/R
+ t                                                                                                                    sub           $t2, $s0, $t3
+r.
+
+          and $t6,$t1,$t7                     IF                            Mem       WB
+
+
+
+
+                                                                      EX
+O                                                         ID/R
+r
+d
+          or $t8,$t1,$t9                              IF                             Mem    WB
+
+
+
+
+                                                                            EX
+e                                                                 ID/R
+r
+                                                                                                       “sub $t2, $s0, $t3” cannot
+                                                                  IF                        Mem   WB      enter pipeline here
+
+
+
+
+                                                                                      EX
+          xor $t4,$t1,$t5                                                   ID/R
+
+
+
+            Load-use data hazard
+                                                                                                                                                                   Chapter 4 — The Processor — 18
+
+
+
+
+          One Way to “Fix” Data Hazard: Use Bubbles                                                    “Fixing” Data Hazard: Use Bubbles – Hardware Solution
+
+                                                                                       Can fix data                                                                              Can fix data
+           add $t1,         IF                       Mem         WB               hazard by waiting                                  IF               Mem   WB              hazard by waiting
+                                             EX
+
+
+
+
+                                                                                                                                                 EX
+     I                               ID/R                                                              I    add $1,$2,$3                  ID/R
+                                                                                       – stall – but                                                                             – stall – but
+     n                                                                                                 n
+                                                                                      impacts CPI                                                                               impacts CPI
+     s                                                                                                 s
+     t     stall                                                                                       t      stall
+     r.                                                                                                r.
+
+     O     stall                                                                                       O      stall
+     r                                                                                                 r
+     d                                                                                                 d
+     e    sub $t4,$t1,$t5                            IF                            Mem     WB          e      sub $4,$1,$5                            IF                     Mem    WB
+                                                                           EX
+
+
+
+
+                                                                                                                                                                     EX
+                                                                 ID/R                                                                                       ID/R
+     r                                                                                                 r
+
+          and $t6,$t1,$t7                                        IF                        Mem    WB           and $6,$1,$7                                 IF                     Mem     WB
+                                                                                    EX
+
+
+
+
+                                                                                                                                                                              EX
+                                                                           ID/R                                                                                      ID/R
+
+
+                                                                                                       A pipeline bubble is a NOP instruction that is inserted dynamically in
+              Q. How does the machine decide that two stalls are needed                                a pipeline register by the interlock hardware. A bubble propagates
+              and how it could be implemented?                                                         through the pipeline just like normal instructions
+                                                                                                     Improved hardware solution to fix data hazard:
+   Pipelining: Data Hazards                                                                          Forwarding (a.k.a. By-passing)
+                                                                 $s0 updated in the
+                                                                 5th clock cycle;
+
+
+                                                                                                                             ID/RR
+                        ID/RR
+                                                                                                                                          ID/RR            EX/Mem Latch
+                                       ID/RR
+
+
+                                               $s0 read request in 3rd clock cycle
+  Solution
+
+               ID/RR
+                                                        ID/RR                                     Use result when it is computed
+                                                                                                     Don’t wait for it to be stored in a register
+                   Bubble (Stall): Pipeline interlocking
+                                                                                                     Additional datapath needed from the output of ALU (EX) to the input of
+                   CPU-time increases; Can we do better??                                             the same ALU!
+
+
+
+
+                                                                            Inter-stage
+Forwarding to “fix” data hazard                                             pipeline
+                                                                            latches                       Example: Data Hazards in Pipeline
+                                                                      Fix data hazards                        CC         1            2           3    4       5     6     7    8
+                                                                        by forwarding
+    add $t1,           IF                       Mem      WB
+                                         EX
+
+
+
+
+                                ID/R                                                                 ADD R1, R2, R3     IF           ID      EX       MEM      WB
+ I                                                                  results as soon as
+ n                                                                  they are available               SUB R4, R1, R5                  IF      ID       EX      MEM   WB
+ s
+                                IF                      Mem      WB to where they are                AND R6, R1, R7                           IF      ID       EX   MEM   WB
+                                                 EX
+
+
+
+
+                                         ID/R
+ t sub   $t4,$t1,$t5                                                           needed
+ r.                                                                                                  OR   R8, R1, R9                                  IF       ID    EX   MEM   WB
+
+ O                                                                                                                              data hazard
+                                         IF                     Mem    WB
+                                                         EX
+
+
+
+
+                                                 ID/R
+ r and $t6,$t1,$t7
+ d                                                                                                   With forwarding mechanism such as EX  EX and Mem  EX
+ e
+                                                IF                     Mem     WB                    all data hazards in this cases can be eliminated.
+                                                                EX
+
+
+
+
+ r or $t8,$t1,$t9                                        ID/R
+
+
+                                                                                                     Total # clock cycles to run this code with forwarding = 8
+                                                        IF                    Mem         WB
+                                                                       EX
+
+
+
+
+                                                                ID/R
+   xor $t4,$t1,$t5                                                                                   Suppose, there is no data forwarding; then # clock cycles = 10
+
+    Data forwarding (in time); data-path set backward (in space);
+    No stalls are needed (saving two)!                                                                                                                                          24
+

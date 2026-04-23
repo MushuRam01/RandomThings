@@ -1,0 +1,399 @@
+CS–2710-1                  Spring 2026         Integer Multiplication                                                         multiplicand
+                                                                                                                                                                1000
+                                                    (unsigned)                                                                   multiplier
+                                                                                                                                                             ×  1001
+Computer Organization and Systems (COS)                                                                                                                         1000
+                                                                                                                                                               0000                add
+                                                                                                                                                              0000
+                                                  Ai and Bi are all 0 or 1                                                                                   1000
+                                                                                                                               product
+AI/ML                                                                                                                                                        1001000
+DS/NLP
+Algo               Lecture #12
+                  13 March 2026
+                                                                                                                                                                             add
+
+CO       CA
+
+              Ashoka University          BBB
+
+
+
+
+                                                Hardware Multiplier (Shift + Add): Actions
+                                                multiplicand
+                                                                                                                                                     Start
+                                                                             1000
+                                                 multiplier
+                                                                          × 1001
+                                                                             1000                                           Product0 = 1             1. Test     Product0 = 0
+                                                                            0000                                                                    Product0
+
+                                                                           0000
+                                                                          1000
+                                                product                   1001000
+                                                                                                         1a. Add multiplicand to the left half of
+                                                                                                          the product and place the result in
+                                                                                                          the left half of the Product register
+
+
+
+                                                            Multiplicand
+                                                                                             Multiplier
+                                                                     32 bits
+                                                                                             (32-bits)                           2. Shift the Product register right 1 bit
+
+
+
+                                                       32-bit ALU
+                                                                                                                                                                 No: < 32 repetitions
+                                                                                                                                             32nd repetition?
+
+                                                                               Shift right     Control
+                                                                Product                                                                                 Yes: 32 repetitions
+                                                                                    Write       test
+                                                                    64 bits
+                                                                                                                                                     Done
+
+
+                                                                          Initially 0
+Multiplication Example
+0010 × 0110 = ? 0010 (+ 2, multiplicand); 0110 (+ 6, multiplier)             Signed Multiplication
+   Itera-       multi-                      Orignal algorithm
+    tion        plicand                     Step                  Product     Recall
+      0         0010      Initial values                         0000 0110
+                                                                                 – For p = a × b, if either a < 0 or b < 0, then p < 0
+                0010      1:0  no operation                     0000 0110
+     1                                                                           – If (a < 0 and b < 0) or (a > 0 and b > 0) then p > 0
+                0010      2: Shift right Product   logical shift 0000 0011       – Hence sign(p) = sign(a)  sign(b)
+     2          0010      1a:1 prod = Prod + Mcand              0010 0011
+
+                0010      2: Shift right Product                 0001 0001    Hence
+
+     3          0010                                             0011 0001
+                                                                                 – Convert multiplier and multiplicand to positive
+                          1a:1 prod = Prod + Mcand
+                                                                                   number each
+                0010      2: Shift right Product                 0001 1000
+                                                                                 – Multiply two positive numbers
+     4          0010      1:0  no operation                     0001 1000       – Compute sign, convert product accordingly
+                0010      2: Shift right Product          +12 0000 1100                                                                              6
+
+
+
+
+Booth’s Encoding                                                              Booth’s Encoding in Binary Domain
+(valid for signed multiplication as well)                                     Multiply x by 01111
+
+  Recall old trick
+                                                                              x (multiplicand); 01111 (multiplier)
+                                                                              => x ×15 (needs four add cycles, 1 shift cycle)
+     Example: 123454 × 9
+                                                                             Search for a run of ‘1’ bits in the multiplier
+              × 9 = 123454 × (10 – 1) = 1234540 – 123454
+             123454
+                                                                                 – e.g. ‘01111’ has a run of 4 consecutive ‘1’ bits
+  Booth’s algorithm applies the same principle
+                                                                                 – Multiplying by ‘01111’ (15 in decimal) is equivalent to
+     – in binary we have just ‘1’ and ‘0’
+                                                                                   multiplying by 16 and subtracting once, since
+                                                                                    x ×15 = x ×(16 – 1) = 16x – x =>(shift-left x, four times) - x
+                                                                              Hence, iterate right to left and look for “runs of 1”:
+                                                                              x × 1111 = x × (10000– 1) = (x ×24) – x
+                                                                                needs 1 subtract, 1 add, four shifts!
+  Booth’s Encoding for Multiplier
+                                                                                                       Booth’s Algorithm
+                    middle of 1-run (11)                   beginning of 1-run (10)                 Current Bit to   Explanation            Example        Operation
+                                                                                                   bit     right                           (multiplier)
+
+                                                                                                   1       0        Begins run of ‘1’      00001111000    Subtract/shift
+
+                       010000111100
+                                                                                                   1       1        Middle of run of ‘1’   00001111000    Nothing/shift
+
+
+                                                                                                   0       1        End of a run of ‘1’    00001111000    Add/shift
+               0-run (00)
+                                                  end of 1-run (01)
+                                                                                                   0       0        Middle of a run of ‘0’ 00001111000    Nothing/shift
+
+
+
+
+Booth’s algorithm: Example
+0010 × 1101 = ? 0010 (+ 2, multiplicand); 1101 (- 3, multiplier)
+ arithmetic shift             op performed in the left half                  initialization
+
+      Itera-        multi-                          Booth’s algorithm
+       tion         plicand                         Step                  Product
+         0          0010         Initial values                          0000 1101 0    start of
+                                                                    -2                  1-run
+
+        1
+                    0010         1c: 10 prod = Prod - Mcand             1110 1101 0                    Building a 32-bit ALU capable of
+                    0010         2: Shift right Product                  1111 0110 1   end of
+                                                                                       1-run            executing MIPS instructions
+        2           0010         1b: 01 prod = Prod + Mcand             0001 0110 1
+
+                    0010         2: Shift right Product                  0000 1011 0
+
+        3           0010         1c: 10 prod = Prod - Mcand             1110 1011 0
+
+                    0010         2: Shift right Product                  1111 0101 1
+
+        4           0010         1d: 11  no operation                   1111 0101 1
+
+                    0010         2: Shift right Product                  1111 1010 1    -6
+Building a 32-bit ALU to implement
+                                                                                                                       What about subtraction (a – b)?
+and, or, add/sub, and slt instructions
+                                                                       C a rr yIn     O p e ra tio n
+
+                             Operation                                                                                  • Two's complement approach: just negate b and add to a.
+                         CarryIn                                 a0    C a rry In
+
+                                                                 b0
+                                                                        ALU0
+                                                                                                       R e s u lt0
+                                                                                                                        • How do we negate?
+                                                                      C a rry O u t
+      a
+                               0
+
+                                                                 a1    C a rry In
+                               1
+                                              Result             b1
+                                                                        ALU1
+                                                                                                       R e s u lt1
+                                                                                                                        • Use XOR or MUX to realize 2’s complement:
+                                                                      C a rry O u t
+                                                                                                                                    Binvert              Operation
+                    FA                                                                                                                             CarryIn
+                               2
+                                                                 a2    C a rry In
+      b
+                                                                                                       R e s u lt2
+                             MUX                                 b2
+                                                                        ALU2
+                                                                                                                            a
+                                                                      C a rry O u t                                                                          0
+               CarryOut
+                                                                                                                                                             1
+                                                                                                                                                                     Result
+
+
+width of the operation-bus?                                     a31                                                                             FA                               1-bit ALU for performing
+                                                                       C a rry In                                           b        0                       2
+     =2                                                         b31
+                                                                       ALU31
+                                                                                                       R e s u lt3 1
+                                                                                                                                     1
+                                                                                                                                                                                 AND, OR, ADD, SUB
+                                                                                                                                                         MUX
+                                                                                                                                   MUX
+ 1-bit ALU for performing                                     32-bit ALU for performing
+ AND, OR, ADD                                                 AND, OR, ADD
+                                                                                                                                              CarryOut
+
+
+
+
+                                                                                                                                                                                  Overflow =
+Supporting slt                                                                                                         Supporting slt $t1  A                                     Carry32  Carry31
+                                                                                                                                              $t2  B      B in v e rt                   C a rry I n         O p e ra tio n
+
+
+                                                                                                                       slt $t3, $t1, $t2      Result  $t3
+                                                                                                                                                                                a0       C a rry I n
+
+slt $t3, $t1, $t2                                                                                                                                                               b0        ALU0
+                                                                                                                                                                                          L e ss
+                                                                                                                                                                                                                              R e s u lt0
+
+
+                                                                                                                       $t3 1 if $t1 < $t2,                                             C a rry O u t
+
+
+$t3 1 if $t1 < $t2,                                                                                                   and 0 otherwise;
+                                                                                                                                                                                a1       C a rry I n
+and 0 otherwise                                                                                                        i.e., when $t1 < $t2,                                    b1        ALU1                                R e s u lt1
+                                                                                                                                                                                 0        L e ss
+
+          Binvert                     Operation
+                                                                                                                       $t3: 00……001                                                     C a rry O u t
+
+                                CarryIn
+
+                                                                                                                                                                                a2       C a rry I n
+  a                                                                                                                                                                             b2        ALU2                                R e s u lt2
+                                          0                                                                                                                                      0        L e ss
+                                                                                                                                                                                        C a rry O u t
+                                          1
+                                                   Result
+
+                                                                                                                                                                              Carry31
+  b        0
+                             FA           2
+                                                                                                                                                                                               C a rr y In
+
+           1
+
+          MUX
+                                      MUX                   • Can we figure out the idea?                                                                                      a3 1      C a rry I n                          R e s u lt3 1
+                                                                                                                                                                               b3 1      ALU 31                      S et
+                                                                                                                                                                                  0       Le ss                               O v e rflo w
+                           CarryOut
+
+                                                                                                                                                     Set                                         Carry32
+Implementing                     Op-code                                     logic              Binv
+                                                                                                Op1
+MIPS instructions                                                                               Op0
+•   Control lines
+                                 Bnegate   (1-bit)                Operation
+                                                                              2-bit                       Processor (CPU) Design
+    Binv Op1 Op0                            a0   CarryIn    Result0
+                                            b0    ALU0
+    000 = and                                     Less
+                                                 CarryOut
+
+
+    001 = or                                a1   CarryIn
+
+    010 = add
+                                                            Result1
+                                            b1    ALU1
+                                             0    Less
+                                                 CarryOut                                     Zero
+
+    110 = sub                                                                                            • We're ready to implement the MIPS “core”
+    111 = slt                               a2
+                                            b2
+                                             0
+                                                 CarryIn
+                                                  ALU2
+                                                  Less
+                                                            Result2
+                                                                                      A                    – load-store instructions: lw, sw
+                                                                                                           – reg-reg instructions: add, sub, and, or, slt
+                                                 CarryOut
+                                                                                          ALU        Y
+                                                                                      B                    – control flow instructions: beq
+                                           a31
+                                                            Result31                      F
+                                                 CarryIn
+                                           b31   ALU31                 Set
+                                             0    Less                                        Overflow
+
+
+
+
+                              • Note: Zero = 1 when the result is zero!
+                               This ALU implements MIPS
+                        Set
+                               add, sub, and, or, slt, and beq
+
+
+
+
+                                                                                                         Two types of functional units:
+MIPS Instruction Execution Cycle                                                                          CPU   Overview:
+                                                                                                           - elements         Fixing
+                                                                                                                       that operate  on data  and control
+                                                                                                                                        data values         paths
+                                                                                                                                                    (combinational)
+                                                                                                           - elements that contain state (sequential)
+
+                                                                                                                                                    For simplicity,
+                                                                                                                                                    assume separate
+           IF  ID/RR  EX  Mem  WB                                                                                                               instruction and
+                                                                                                                                                    data memory
+                                                                                                                                                    blocks
+
+
+
+        Access memory for load/store;
+
+        PC  target address or PC + 4;
+
+        Fetch next instruction from memory address pointed by PC
+                                                               Control               IF  ID/RR  EX  Mem  WB
+Multiplexers for stitching multiple paths
+                                       Can’t just join
+                                        wires together
+                                           Use multiplexers
+
+
+
+
+Combinational Elements                                         Sequential Elements
+
+                                                                  • Register: stores data in a circuit
+   •   AND-gate
+                            Adder                A
+                                                           Y        (a chain of D-FFs)
+        – Y=A&B                                        +
+                                Y=A+ B           B                  – Uses a clock signal to determine when to update the
+        A                                                              stored value
+                Y
+        B                                                            – Edge-triggered: update when Clk changes from 0 to
+                            Arithmetic/Logic Unit                     1
+      Multiplexer              Y = F(A, B)
+                                                                  D           Q                        D          Q
+                                                                       D-FF                         Write
+                                                                 Clk                                 Clk
+            M                       A
+            u   Y
+            x                               ALU   Y                               • Register with write control
+                                    B
+            S                                                                        – Only updates on clock edge when
+                                            F
+                                                                                       write control input is 1
+                                                                                     – Used when stored value is required later
+                                              MIPS has a 32 × 32-bit register file
+  Register File: Read                            Use for frequently accessed data              Register File: Write
+                                                 Numbered 0 to 31
+    • Built using D flip-flops
+                                              Assembler names
+                                                 $t0, $t1, …, $t9 for temporary values         • use the clock to determine when to write, provided
+Read register
+ number 1                                        $s0, $s1, …, $s7 for saved variables            Write is enabled
+                 Register 0
+                                                                                                                           Write
+                 Register 1       M
+                                  u                                                                                                          C
+                                      Read data 1                                                                                        0
+                                                                                                                                                 Register 0
+                Register n – 1    x                                                                                                      1   D
+                                                         Read register
+                 Register n                              number 1                 Read                                              n-to-1   C
+                                                    5                            data 1
+                                                                                                                 Register number
+                                                                                                                                   decoder       Register 1
+Read register
+ number 2
+                                                         Read register                    32                                          n– 1
+                                                                                                                                             D
+
+                                                    5    number 2                                                                        n
+                                                                 Register file
+                                  M                      Write
+                                  u
+                                  x
+                                      Read data 2   5    register
+                                                                                  Read          add rd, rs, rt
+                                                                                                                                             C
+                                                                                                                                             Register n – 1
+                                                                                                                                             D
+                                                                                 data 2
+                                                         Write
+                                                         data        Write
+                                                                                          32                                                 C
+
+                                                    32                                                             Register data             D
+                                                                                                                                                 Register n
+
+
+
+                                                                         1
+                     add rd, rs, rt
+

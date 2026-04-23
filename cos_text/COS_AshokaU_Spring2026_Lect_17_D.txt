@@ -1,0 +1,568 @@
+     CS–2710-1                    Spring 2026                Review
+    Computer Organization and Systems (COS)
+                                                             Q1. What is the maximum speed-up achievable in
+                                                             MIPS pipeline and why?
+    AI/ML
+                                                                IF      ID/RR  EX  Mem  WB
+    DS/LLM               Lecture #17                        Ans. Standard MIPS supports a 5-stage pipeline;
+                         08 April 2026                           Also, Max Speed-up = # pipeline stages;
+                                                               Q2. Which factors prevent the realization of
+                                                               full pipeline speed?
+    CO       CA
+                                                                            Ans.
+                                                                            1. Pipeline overhead;
+                  Ashoka University                   BBB                   2. Hazards;
+
+
+
+
+ Review                                                          Review
+ Q. In today’s processors such as ARM Cortex                     Q. Why inter-stage latches are needed for
+ A-Series or X-Series, what is the typical depth of              pipeline implementation?
+ the pipeline?
+
+Ans. Earlier version of ARM processors such as ARM9
+(1997) comprises the classical 5-stage pipeline;
+                                                                  IF     ID/RR  EX  Mem  WB
+Modern ARM processors (2020+) support ~ 7 – 15
+stages of pipeline architecture to achieve high speed-
+up; ARM Cortex-X4 (2023) – 10-stage pipeline;
+
+Classical 5-stage pipelining is still being deployed in
+many microcontrollers and embedded systems (ARM,
+NXP, RISC-V, etc;)
+MIPS Pipeline                                                                           Review: Data Hazards in Pipelining
+• Pipeline registers (latches) are inserted between two consecutive pipeline
+  stages
+• All latches are synchronized with the system clock and seamlessly transfer
+  instruction-bits and other intermediate data forward, across consecutive            • A hazard refers to the possibility of erroneous
+  pipeline stages                                                                       execution of an instruction in a pipeline
+
+                                                                                      • A data hazard represents the possibility of erroneous
+                     ID/                                                                execution because of the unavailability of correct data
+      IF                              EX                 Mem        WB
+                     RR
+    Instruct 5     Instruct 4       Instruct 3       Instruct 2    Instruct 1
+
+                  Status during the fifth clock pulse
+
+
+
+
+                                                                                       Improved hardware solution to fix data hazard:
+     Pipelining: Data Hazards                                                          Forwarding (a.k.a. By-passing)
+                                                          $s0 updated in the
+                                                          5th clock cycle;
+
+
+                                                                                                             ID/RR
+                           ID/RR
+                                                                                                                     ID/RR       EX/Mem Latch
+                                   ID/RR
+
+
+                                           $s0 read request in 3rd clock cycle
+    Solution
+
+                   ID/RR
+                                                 ID/RR                              Use result when it is computed
+                                                                                       Don’t wait for it to be stored in a register
+                       Bubble (Stall): Pipeline interlocking
+                                                                                       Additional datapath needed from the output of ALU (EX) to the input of
+                       CPU-time increases; Can we do better??                           the same ALU!
+                                                                                Inter-stage
+Forwarding to “fix” data hazard                                                 pipeline                                     Forwarding with Load-Use Data Hazards
+                                                                                latches
+
+                                                                          Fix data hazards                                   Clock Cycle      1     2      3      4      5     6       7    8       9
+                                                                            by forwarding
+    add $t1,          IF                      Mem        WB                                                                                                                        via half-cycle
+
+
+
+
+                                    EX
+                           ID/R                                                                                              lw   $1,4($2) IF                    Mem     WB
+
+
+
+
+                                                                                                                                                           EX
+ I                                                                                                                                                 ID/R
+                                                                        results as soon as                              I
+ n                                                                      they are available                              n                                                          write/read
+ s                                                                                                                      s
+                           IF                            Mem         WB to where they are
+
+
+
+
+                                               EX
+                                    ID/R                                                                                     sub $4,$1,$5          IF                   Mem    WB
+
+
+
+
+                                                                                                                                                                 EX
+ t sub                                                                                                                                                    ID/R
+         $t4,$t1,$t5                                                               needed                               t
+ r.                                                                                                                     r.         unresolved
+ O                                                                                                                           and $6,$1,$7                 IF                   Mem     WB
+
+
+
+
+                                                                                                                                                                        EX
+                                                                                                                        O                                        ID/R
+                                    IF                           Mem        WB
+
+
+
+
+                                                         EX
+                                              ID/R
+ r and $t6,$t1,$t7                                                                                                      r
+ d                                                                                                                      d
+ e                                                                                                                           or   $8,$1,$9                       IF                   Mem   WB
+
+
+
+
+                                                                                                                                                                               EX
+                                                                                                                        e                                               ID/R
+                                              IF                           Mem     WB
+
+
+
+
+                                                                     EX
+ r or $t8,$t1,$t9                                        ID/R                                                           r
+
+                                                                                                                             xor $4,$1,$5                               IF                  Mem     WB
+
+
+
+
+                                                                                                                                                                                       EX
+                                                                                                                                                                               ID/R
+                                                         IF                       Mem         WB
+
+
+
+
+                                                                           EX
+                                                                 ID/R
+   xor $t4,$t1,$t5
+                                                                                                                             So, we need to insert additional datapath backward (in space)
+    Data forwarding (in time); data-path set backward (in space);                                                            from Mem/WB latch to the input of EX (Mem  EX Forwarding in
+    No stalls are needed (saving two)!                                                                                       time)
+
+
+
+
+        Example: Data Hazards in Pipeline                                                                                    Forwarding with Load-Use Data Hazards
+             CC        1        2         3          4          5          6      7      8                                   Clock Cycle      1     2      3      4      5     6       7    8       9
+
+   ADD R1, R2, R3     IF     ID          EX        MEM        WB                                                             lw $t1,4($t2) IF                    Mem    WB          Mem-to-Ex data
+
+
+
+
+                                                                                                                                                          EX
+                                                                                                                                                   ID/R
+                                                                                                                        I
+   SUB R4, R1, R5            IF          ID         EX        MEM         WB                                            n
+                                                                                                                                                                                    forwarding
+   AND R6, R1, R7                        IF         ID          EX        MEM    WB
+                                                                                                                        s
+                                                                                                                             sub $t4,$t1,$t5       IF                   Mem     WB
+
+
+
+
+                                                                                                                                                                  EX
+                                                                                                                                                          ID/R
+                                                                                                                        t
+   OR    R8, R1, R9                                 IF          ID        EX     MEM     WB                             r.
+                                                                                                                                                          IF                   Mem     WB
+
+
+
+
+                                                                                                                                                                         EX
+                                                                                                                                                                 ID/R
+                           data hazard                                                                                  O and $t6,$t1,$t7
+                                                                                                                        r
+   With forwarding mechanism such as EX  EX and Mem  EX                                                               d
+                                                                                                                                                                 IF                   Mem   WB
+
+
+
+
+                                                                                                                                                                               EX
+                                                                                                                                                                        ID/R
+                                                                                                                        e or $t8,$t1,$t9
+   all data hazards in this cases can be eliminated.                                                                    r
+                                                                                                   Solution: Push one
+                                                                                                                                                                        IF                  Mem     WB
+
+
+
+
+                                                                                                                                                                                       EX
+                                                                                                                                                                               ID/R
+   Total # clock cycles to run this code with forwarding = 8                                                                 xor $t4,$t1,$t5
+   Suppose, there is no data forwarding; then # clock cycles = 10
+                                                                                                                              Will still need one stall cycle even with forwarding
+
+                                                                                        11                                    We cannot forward data “backward in time”!
+Data Hazards                                The stall is necessary as shown                       Example: Load-Use Data Hazards in Pipeline
+                                                           here.
+             Time (clock cycles)                                                                                CC            1         2               3        4      5          6        7        8
+I                                                                                                   LW    R1, 0(R2)          IF        ID          EX       MEM        WB
+n
+      lw $1, 4($2)
+
+
+
+
+                                              ALU
+                         Ifetch     Reg               DMem    Reg
+s                                                                                                   SUB R4, R1, R5                     IF          ID       EX         MEM       WB
+t                                                                                                   AND R6, R1, R7                                 IF       ID         EX        MEM       WB
+r.
+                                                                                                    OR    R8, R1, R9                                        IF         ID        EX        MEM       WB
+
+
+
+
+                                                                ALU
+      sub $4, $1, $5               Ifetch    Reg     Bubble            DMem    Reg
+
+O
+r
+                                                                                                                                                 data hazard                     # stall-cycle = 1
+d                                                    Bubble
+                                                                                                              CC       1           2        3       4            5           6         7         8    9
+
+
+
+
+                                                                        ALU
+                                            Ifetch             Reg            DMem         Reg
+e     and $6, $1, $7                                                                                LW    R1, 0(R2)     IF        ID    EX          MEM          WB
+r
+                                                                                                    SUB R4, R1, R5                IF        ID      stall        EX     MEM         WB
+                                                     Bubble
+
+
+
+
+                                                                                ALU
+                                                              Ifetch   Reg                 DMem
+      or $8, $1, $9                                                                                 AND R6, R1, R7                          IF      stall        ID         EX     MEM       WB
+
+                                                                                                    OR    R8, R1, R9                                stall         IF        ID        EX    MEM      WB
+
+
+     There are some instances where hazards occur, even with forwarding.                          Total # clock cycles to run this code = 9
+
+                                                                                      13          Stall is inevitable when the destination of load is a source of the next instruction
+
+
+
+
+     Summary: Load-Use Data Hazard                                                                 Data Forwarding Needs Extra Hardware
+                                                                                                   Forwarding EX  EX and Mem  EX
+        Can’t always avoid stalls by forwarding
+          If value not computed when needed
+          Can’t forward backward in time!
+
+          Need stalls so that forwarding is possible
+
+
+
+
+                                                                                                    We insert additional datapath backward (in space) from both
+                                                                                                    EX/Mem-latch and Mem/WB-latch to the input of EX (EX  EX,
+                                                              Chapter 4 — The Processor — 15        and Mem  EX for data forwarding in time)
+     Datapath with Forwarding and Hazard Detection
+                                                                                                   Tabular Representation of Pipeline
+                                                                                              LW   R1, 4(R2)         IF         ID        EX       MEM        WB
+
+                                                                                              SUB R4, R1, R5                    IF        ID       EX         MEM       WB
+
+                                                                                              AND R6, R1, R7                              IF       ID         EX        MEM       WB
+
+                                                                                              OR   R8, R1, R9                                      IF         ID        EX        MEM    WB
+
+
+                                                                                              Resolving data hazard
+                                                                                              LW   R1, 4(R2)    IF        ID     EX        MEM          WB
+
+                                                                                              SUB R4, R1, R5               IF        ID    stall        EX     MEM        WB
+
+                                                                                              AND R6, R1, R7                         IF    stall        ID         EX    MEM        WB
+
+                                                                                              OR   R8, R1, R9                              stall         IF        ID        EX    MEM   WB
+
+
+                                                                                                Inserting vertical bubbles is equivalent to inserting
+                                                                                                horizontal bubbles
+                                                             Chapter 4 — The Processor — 17
+
+
+
+
+    Data hazards – Software Interlocking                                                      RAW Data Hazards
+
+         C code for A = B + E; C = B + F;                                                         Read-After-Write (RAW)
+Reorder code to avoid use of load result in the next instruction
+                                                                                                    InstrJ tries to read operand before InstrI writes it
+ lw $t1, 0($t0)       IF       ID     EX     MEM     WB
+
+ add $t3, $t1, $t1                      IF      ID      EX      MEM      WB
+                                                                                                                     I: add $t1,$t2,$t3
+                     lw $t1, 0($t0)
+                                                        lw $t1, 0($t0)                                               J: sub $t4,$t1,$t3
+                     lw $t2, 4($t0)
+                                                        lw $t2, 4($t0)
+         stall       add $t3, $t1, $t2
+                                                        lw $t4, 8($t0)
+                     sw $t3, 12($t0)                                                                Caused by            “dependence”
+                                                        add $t3, $t1, $t2
+                     lw $t4, 8($t0)
+                                                        sw $t3, 12($t0)
+         stall       add $t5, $t1, $t4
+                                                        add $t5, $t1, $t4
+                     sw $t5, 16($t0)
+                                                        sw $t5, 16($t0)
+Software             2 stalls inevitable even with
+                                                     No stall; Total = 11 cycles
+                     forwarding; Total = 13 cycles
+Solution                                             with forwarding; for load-use cases,
+                                                     insert NOP
+    WAW Data Hazards                                                                   WAR Data Hazards
+                                                       : stall
+         Write-After-Write (WAW)                                                            Write-After-Read (WAR)
+         Because of WAW hazard, sub tries to write $t1 before                                              I: add $t4,$t1,$t3
+         it is written by lw                                                                               J: sub $t1,$t2,$t3
+
+                    I: lw $t1,0($t2)                  data cache miss                 Can Instr J write to register $t1 earlier before Instr I reads it?
+                   J: add $t4, $t1, $t2
+                                                           $t1 is written by lw               I:      IF     ID/RR     EX   MEM WB
+                   K: sub $t1,$t2,$t3                      in 8th clock cycle
+                                                                                              K:               IF      ID/RR EX MEM WB
+
+RAW        I: IF ID/RR EX              MEM                    WB                  In the MIPS in-order pipeline scheme, reads are early
+hazard                                                         $t1 is written by     (ID/RR) and writes are late (WB); hence, WAR cannot occur.
+           J:         IF       ID/RR   EX     MEM WB           sub in 7th clock
+                                                               cycle (WAW)           When can WAR occur?
+           K:                   IF     ID/RR EX MEM WB                               Out-of-order execution; unbalanced pipeline such as that for FP
+         Write in $t1 is performed in wrong order!                                        Read-After-Read (RAR): Not a hazard
+
+
+
+
+   Control Hazards                                                                     Datapath
+                                                                                        Instruction
+                                                                                           Fetch      With Fetch Control
+                                                                                                    Instr. Decode
+                                                                                                     Reg.
+                                                                                                                   Execute
+                                                                                                                  Addr. Calc
+                                                                                                                             Memory Write
+                                                                                                                             Access Back
+
+
+                                                                                                                                             beq $t1, $t2, Target
+
+     A control hazard arises when the computation of the
+     destination of a branch and update of PC are awaited,
+     and hence, the instruction to be executed next, is
+     uncertain at this moment
+                                               Let $t1 = $t2                                                IF  ID/RR  EX  Mem  WB
+
+           beq $t1, $t2, Target        IF ID/RR      EX    MEM WB
+           lw $t3, 0($t4)                   IF       ID/RR EX MEM WB
+           …
+           …                                What will happen to the                PC-Update for beq is
+                                                                                   done in Mem-stage
+     Target: add $t1, $t2, $t3              lw instruction?
+                                                                      23                            pipeline latches
+                                                                                                    beq
+     Example: Control Hazards due to Branch                                       Branch                   IF        ID   EX    MEM   WB               lw
+
+      Dependencies backward in time cause hazards                                Penalty                            *    *       *    IF        ID     EX     MEM    WB
+                                                                                                                              branch penalty: 3 clock cycles
+
+      beq          IF                 Mem        WB
+
+
+
+
+                                EX
+                        ID/R
+I
+n
+s
+      lw                IF                   Mem       WB
+
+
+
+
+                                       EX
+                               ID/R
+t
+r.
+
+      Inst 3                   IF                     Mem    WB
+
+
+
+
+                                             EX
+O                                     ID/R
+r
+d
+e     Inst 4                          IF                     Mem   WB
+
+
+
+
+                                                      EX
+                                             ID/R
+r
+                                                                                    What is the branch
+                                                                                      penalty for this
+                                                                                       architecture?
+                                                                                    PC is updated in the
+                                                                                       MEM-stage!
+
+
+
+
+                                                                                                                                                                         §4.8 Control Hazards
+      One Way to “Fix” a Control Hazard: Insert stalls
+                                                                                     Control Hazards: Continue, flush if branch is taken
+                                     PC-update
+                                                                   Fix branch
+      beq          IF                 Mem    WB                                         If branch outcome determined in MEM
+                               EX
+
+
+
+
+I                       ID/R                                        hazard by
+n                                                                   waiting for
+s                                                            3 stalls – affects
+t     stall                                                                CPI
+r.
+
+O     stall
+r
+d
+                                                                                                                                                            Flush these
+e     stall
+r                                                                                                                                                           instructions
+                                             IF                    Mem    WB
+                                                             EX
+
+
+
+
+                                                      ID/R
+      lw
+
+      Inst 3                                                                                                3 stall cycles
+                                                                                                                PC
+
+                                                                                                                                            Chapter 4 — The Processor — 28
+ Control Hazards                                                                   Datapath
+                                                                                    Instruction
+                                                                                       Fetch    With
+                                                                                                 Reg. Fetch Control
+                                                                                                Instr. Decode  Execute   Memory
+                                                                                                              Addr. Calc Access
+                                                                                                                                          Write
+                                                                                                                                          Back
+                                                                                                  Use a separate ALU
+    Hardware solution?                                                                           for comparing two
+                                                                                                  registers (zero-
+                                                                                                  checker), and move
+                                                                                                  target address-
+ Can we compute branch target and                                                                 computation and
+                                                                                                  PC-update MUX,
+ PC-Update, earlier in the pipeline?                                                              HERE: ID/RR
+
+                                                                                                   IF  ID/RR  EX  Mem  WB
+
+ Would reduce stalls for successor
+ instructions!
+                                                                                   Outcome of branch is
+                                                                                  known at the end of EX;
+                                                                                  PC-update is being done
+                                                                                      in Mem-stage
+                                                 Chapter 4 — The Processor — 29                                        Chapter 4 — The Processor — 30
+
+
+
+
+Control Hazards (beq) – So far                                                      Control Hazards (beq)
+ In MIPS pipeline, we can reduce branch penalty                                       In MIPS pipeline, we can reduce branch
+      by comparing registers (zero-checking) and computing target                      penalty
+       (PC-update) early in the pipeline
+      Add hardware to do it in ID-stage
+                                                                                         by comparing registers (zero-checking) and
+     In other words,
+                                                                                          computing target (PC-update) early in the
+      Find out earlier whether the branch is taken or not-taken (add
+                                                                                          pipeline
+       zero-checker to ID-stage)                                                         Add hardware to do it earlier in ID/RR-stage
+      Compute target-address of taken-branch earlier (allocate
+       hardware resources at the ID-stage)
+
+
+
+
+       IF                                    ID/RR
+                                                                                                                       Chapter 4 — The Processor — 32
+     Stall on Branch                                                               Stall on Branch
+        Wait until branch outcome determined (at                                     Moving branch-target determination from
+         ID/RR-stage) before fetching next                                             Mem to ID/RR-stage helps resolve
+         instruction                                                                   hazards in successor instructions
+
+                                                                                    However,
+                                                                                    it may pose problems to preceding
+
+                                                                                     instructions, when a branch source-
+                                                                                     register is a destination register of a
+     Instead of “three stalls”, we now have only “one stall”                         preceding instruction!
+
+                                                  Chapter 4 — The Processor — 33                                             Chapter 4 — The Processor — 34
+
+
+
+
+     Data Hazards for Branches                                                     Data Hazards for Branches
+        If a comparison register is a destination of                                 If a comparison register is a destination of
+         preceding ALU instruction or 2nd preceding                                    immediately preceding load instruction
+         load instruction                                                                  Need 2 stall cycles
+            Need 1 stall cycle
+
+lw   $t1, addr          IF   ID   EX   MEM   WB                                    lw       $1, addr        IF    ID   EX   MEM   WB
+
+
+add $t4, $t5, $t6            IF   ID   EX    MEM      WB                           beq $1, $0, target stalled     IF   ID
+
+
+beq $t1, $t4, target stalled      IF   ID                                          beq stalled                              ID
+
+
+beq $t1, $t4, target                         ID       EX    MEM    WB              beq $1, $0, target                              ID    EX    MEM     WB
+
+
+
+
+                                                  Chapter 4 — The Processor — 35                                             Chapter 4 — The Processor — 36
+

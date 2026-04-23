@@ -1,0 +1,367 @@
+ CS–2710-1                  Spring 2026
+Computer Organization and Systems (COS)
+                                                                              “Computers are useless.
+ AI/ML
+ DS/NLP
+                                                                              They can only give you answers.”
+ Algo               Lecture #11
+                                                                                   Pablo Picasso (1881 – 1973)
+                   11 March 2026
+
+CO        CA
+
+               Ashoka University          BBB
+
+
+
+
+                                                Review: IEEE 754 floating-point standard
+                                                                                                1   8        23
+                                                 • Leading “1” bit of significand is implicit   S   E        M
+
+                                                 • Exponent is “biased” to make comparison easier
+                                                    – all 0s is smallest exponent; all 1s is largest
+                                                    – bias of 127 for single precision and 1023 for double precision
+Computer Arithmetic: Review                         – summary: (–1)sign significand) 2exponent – bias
+
+                                                 • Example 1 (Encoding):
+                                                    For a given decimal number, construct its FP-representation
+
+                                                     – decimal: - 0.75
+                                                      binary: - 0.11 = - 1. 1 x 2-1 (normalized)
+                                                      Floating-point exponent = - 1 +127 = 126 = 01111110
+                                                      IEEE single precision:
+                                                     - 0.75 = 1 01111110 10000000000000000000000
+                                                                         Summary of IEEE 754 Encoding
+            Decoding: Example                                     Single-Precision      Exponent = 8    Fraction = 23         Value
+                                                                  Normalized Number       1 to 254        Anything      ± (1.F)2 × 2E – 127
+
+1 0111 1110 11000000000000000000000000000                         Denormalized Number        0            nonzero        ± (0.F)2 × 2–126
+                                                                  Zero                       0               0                  ±0
+                                                                  Infinity                  255              0                 ±∞
+• Sign bit is one:                                                NaN                       255           nonzero              NaN
+             Number is negative
+                                                                  Double-Precision      Exponent = 11   Fraction = 52         Value
+• Biased exponent E = 0111 1110 |2 = 126;                         Normalized Number       1 to 2046       Anything      ± (1.F)2 × 2E – 1023
+                                                                  Denormalized Number        0            nonzero        ± (0.F)2 × 2–1022
+• Actual exponent e = E – 127 = - 1  2-1                         Zero                       0               0                  ±0
+• Significand  1.11 (restored the hidden bit)                    Infinity                  2047             0                 ±∞
+                                                                  NaN                       2047          nonzero              NaN
+• The number = - 1.11  2-1 |2 = - 0.111 |2 = -0.875|10
+                                                                   Overflow leads to ± ∞; underflow (gradual)  denormals;
+                                                                   underflow (abrupt)  ± 0
+
+
+
+
+                               Floating-Point Addition
+                                                                    FP Adder Hardware
+                        If one number is +ve and the other is
+                        –ve, addition of significands should                                                              Step 1
+                        be done using 2’s complement and
+                        the result is reconverted into sign-                                                              compare
+                        magnitude form                                                                                    exponents
+
+                                                                                                                          Step 2
+
+                                 A+B=                                                                                    equalizing
+                      0 1000 0001 0000 0000 0000 0000 0000 000                                                           exponents
+                        A + B = 10.0 × 21; A + B = 1.0 × 22                                                                Integer Step 3
+                       A: + 0.1000 0000 0000 0000 0000 000 × 21                                                            addition
+                       A: + 1.0000 0000 0000 0000 0000 000 ×
+                                                           20                                               normalize      Step 4
+
+                     B: + 1.1000 0000 0000 0000 0000 000 × 21
+                                                                                                            round          Step 5
+                  A 0 0111 1111 0000 0000 0000 0000 0000 000
+                                                                                                            Result
+                  B   0 1000 000 1000 0000 0000 0000 0000 000
+Floating Point Multiplication
+                                                                          Agenda today …
+
+
+                                                                            Floating-Point Addition
+                                                                            Floating-Point Multiplication
+                                                                            Floating-Point Division ?
+
+
+
+
+  Idea …                                                          FP-Division (using multiplication and
+                                                                  add/subtract)
+… Functional iteration methods transform
+FP-division into several FP-multiplications and additions           Divide A/B to produce C; Both A, B are in IEEE 754 float
+                                                                     format
+                       Floating-Point Division
+                                                                       There is no notion of a remainder in FP division
+                                                                    Algorithm
+                                                                       EC ← EA – EB + bias
+                                                                       SC ← SA / SB
+            Addition                             Multiplication
+                                                                       S represents the significand with leading 1 restored
+                                                                       normalize, round, re-normalize
+     FP-Division via Goldschmidt Method                                FP-Division via Goldschmidt Method
+
+ Divide A/B to produce C; Both A, B are in float format          Let us compute the reciprocal (1/B) of B
+ Let us compute the reciprocal (1/B) of B                        Let us compute (1/SB) –> reciprocal of the significand
+    Then, we can use the standard FP-multiplication:             If B is a normalized floating-point number, 1 < SB < 2
+                           C = A/B = A * (1/B)                      Let SB = 1 + X ; (0 < X < 1)
+ Ignoring the exponent of B,                                         1
+                                                                        =
+                                                                           1
+                                                                              =
+                                                                                     1
+                                                                                           ; 𝑋 = 1 − 𝑋, 𝑋 < 1
+                                                                      𝑆   1+𝑋   1 + 1 − 𝑋′
+    Let us compute (1/SB)
+ If B is a normalized floating-point number, 1 < SB < 2                               1        1    1
+                                                                                     =       = ∗
+                                                                                     2 − 𝑋′     2 1 −𝑋
+   Let SB = 1 + X ; (0 < X < 1)                  SB = 1.11;                                            2
+   Example B:                                    X = 0.11                         1    1           𝑋     1
+                                                                                 = ∗        ; ( 𝑌 = ,𝑌 < )
+    1 0111 1110 11000000000000000000000000000                                     2 1 −𝑌           2     2
+
+
+
+
+     FP-Division via Goldschmidt Method                                FP-Division via Goldschmidt Method
+
+       =        =        ; 𝑋 = 1 − 𝑋; 𝑋 < 1)                         =       =            ; 𝑋 = 1 − 𝑋; 𝑋 < 1)
+
+                                                                                         1   1              𝑋      1
+                           1      1    1                                             =     ∗    ;      𝑌=     ,𝑌 <
+                       =         = ∗                                                     2 1 −𝑌             2      2
+                         2 − 𝑋′   2 1 −𝑋
+                                         2                                       ≈       ∗ 1+𝑌 1+𝑌           1+𝑌      … (1 + 𝑌 )
+                     1     1         𝑋     1
+                    = ∗         ; 𝑌 = ,𝑌 <
+                     2 1 −𝑌          2     2
+                                  (   )
+                                                                 B: 1 0111 1110 11000000000000000000000000000
+    Now,        =    =
+                 = …                                              Use FP-multiplier to obtain Y2 , Y4, Y8, and Y16     SB = 1.11;
+                    1 + 𝑌 1 + 𝑌 … (1 + 𝑌 )                        Need 4 multiplications, and 5 additions;             X = 0.11;
+                 =                                                Need 4 more multiplications to generate (1/(1-Y));   𝑋′ = (1 – X) =
+                            1 −𝑌                                  Compute 1/SB by a right-shift through one-bit;       0.01 (in binary);
+            ≈ 1 + 𝑌 1 + 𝑌 1 + 𝑌 … (1 + 𝑌 )
+                                                                  Multiply it by SA and compute exponent of C;         Y=     = 0.001
+                                             Y32 is negligible    Round, normalize, re-normalize to obtain C = A/B;
+   FP-Division via Newton-Raphson Method                                       FP-Division via Newton-Raphson Method
+ Divide A/B to produce C; Both A, B are in float format                              Aim is to compute 1/b; f(x) = (1/x) – b
+ Let us compute the reciprocal of B (= 1/B)                                           f(x) = 0, when x = 1/b                1 < b = SB < 2;
+    Then, we can use the standard FP-multiplication: C = A/B = A * (1/B)        computing the reciprocal: same as computing the root of f(x)
+ Ignoring the exponent of B, Let us compute (1/SB)
+ If B is a normalized floating-point number, 1 < SB < 2; let b = SB;
+    Aim is to compute 1/b                                                                                                x-crossing occurs in the
+ Let us create a function f(x) = (1/x) – b
+                                                                                                                          interval (0.5, 1]
+                                                                                                                          .
+    f(x) = 0,        when x = 1/b
+ Problem of computing the reciprocal
+    same as computing the root of f(x)
+
+
+
+
+                                                                               FP-Division via Newton-Raphson Method
+    Iterative method for computing (1/b)                                             Aim is to compute 1/b; f(x) = (1/x) – b;              1 < b = SB < 2;
+                                                                                      f(x) = 0, when x = 1/b
+     Start with an approximate value of x (0.5, 1] = x0 (from a look-up         computing the reciprocal: same as computing the root of f(x)
+      table                                                                                  Newton’s iteration for zero finding:
+         Locate x0 on the graph of f(x)                                                     If xi is an estimate for a zero of f, then xi+1 is a better
+                                                                                             estimate. To compute xi+1, find the intersection of
+         Draw a tangent to f(x) at (x0 , f(x0))
+                                                                                             the x-axis with the tangent line to f at f(xi).
+         Let the tangent intersect the x axis at x1                                                     The equation of the tangent:     Next guess xi+1 : where the
+         Draw another tangent at (x2, f(x2))                                                                                             tangent crosses x-axis:
+
+     Keep repeating
+                                                                                                                 x-crossing of f(x) occurs
+         Ultimately, we will converge to the root                                                               in the interval x = (0.5, 1]
+                                                                                                                 .
+
+                                                                            initial guess for the
+                                                                            solution of f(x) = 0    next guess
+   FP-Division via Newton-Raphson Method                                                                                              Thus, division can be
+         Aim is to compute 1/b; f(x) = (1/x) – b;          1 < b = SB < 2;
+                                                                                     Number of Iterations ..                          accomplished with only
+                                                                                                                                      shift, multiply,
+          f(x) = 0, when x = 1/b                                                       Aim is to compute 1/b; f(x) = (1/x) – b;      and subtract operations
+     computing the reciprocal: same as computing the root of f(x)                       f(x) = 0, when x = 1/b ; 1 < b = SB < 2;
+                                           Algorithm: C = A/B                         computing the reciprocal: same as computing the root of f(x)
+    xi is a guess solution for             1. Obtain an approximate value of 1/b
+    f(x) = 0 i.e., xi = 1/b                (call it x0) using a table lookup;                                                                     1/2 < 𝑥0 < 1;
+                                           2. Iterate xi+1 = xi(2 xi b) until                   error in 𝑥 = 𝜀 𝑥      = 𝑥0 − = [           ] = x0 – 1/b < 1/2
+                                           reaching an xn that is accurate enough;
+                                           3. Multiply xn by SA to obtain SC;                                error in 𝑥 = 𝜀 𝑥   = (𝑏𝑥 − 1)/b
+                                      Look-up table in binary                                                                    = 𝑏 2𝑥 − 𝑏𝑥 − 1 /𝑏
+                                                                     b    1/b                                                     = − 𝑏𝑥 − 1 /𝑏
+                                      for b and 1/b, 1 < b < 2;      1.00 1.00        𝜀 𝑥 ~ 1/232;
+                                     x-crossing of f(x) occurs                                                                    =−𝜀 𝑥 b;
+                                                                     1.01 0.11        Hence, 5 iterations will be enough         𝜀 𝑥 ~ 𝜀 𝑥
+                                     in the interval x = (0.5, 1]    1.10 0.10
+                                     .
+                                                                                     for single-precision FP-arithmetic as    The error thus reduces by a
+initial guess for the                                                1.11 0.10       we have 23-bit mantissa;
+solution of f(x) = 0    next guess
+                                                                                                                              power of 2 in every iteration!
+
+
+
+
+         Arithmetic for Computers: Review                                                  Why integer adders are so important?
+            Operations on integers
+               Addition and subtraction                                               • Addition: a fundamental operation
+                                                                                            Basic block of most arithmetic operations
+               Multiplication and division
+                                                                                            Address calculation
+               Dealing with overflow
+                                                                                            FP adders and multipliers all need integer addition
+               Hardware implementation of ALU
+                                                                                       • Faster and faster
+            Floating-point real numbers                                               • How?
+               Representation and operations                                               Architectural-level optimization
+               Overflow and underflow                                                      Gate-level optimization
+               Hardware implementation of FP-operations
+                                                                                            Speed/area trade-off
+                                                                                                     Review: 1-bit adder
+
+                                                                                    • One-bit Full Adder:
+                                                                                                                                      Cin A B Sum Cout
+                                                                                                                                      0 0 0 0        0
+                                                                                                                                      0 0 1 1        0
+      How to speed up computer arithmetic?                                                 A   B                                      0 1 0 1        0
+                                                                                                         Sum = A  B  Cin            0 1 1 0        1
+                                                                                                                                      1 0 0 1        0
+                                                                                    Cout   FA      Cin
+                                                                                                                                      1 0 1 0        1
+                                                                                                         Cout = A.B + B.Cin + A.Cin
+                                                                                                                                      1 1 0 0        1
+                                                                                           Sum                                        1 1 1 1        1
+
+
+
+
+                    n-bit Ripple-Carry Adder (RCA)                                         Subtraction using 2’s complement
+• To add two n-bit numbers                              A: an-1, an-2, ……, a1, a0                  (Compute A – B)
+                                                        B: bn-1, bn-2, ……, b1, b0
+        an-1 bn-1           a2        b2   a1        b1     a0 b0
+
+
+ Cn       FA         ...     FA             FA                FA         C0
+
+
+          sn-1                   s2             s1            s0
+                                                                A    B
+
+                                                     Cout          FA
+ • N-bit RCA delay = n *                                                     Cin
+
+ •  = (delay of 1-bit FA)
+                                                                   Sum
+
+  Critical path in an n-bit ripple-carry adder                                                                                             If SUBTRACT = 0
+       CCT needs to accommodate long delay                                                                                                S =A+ B
+   Cost = O(n); delay = O(n)                                                                                                               Else S = A – B
+                                                                          Idea: Carry-Lookahead Adder (CLA)
+Possible solutions to mitigate                                                   A3        B3              A2        B2             A1        B1             A0        B0
+                                                                   RCA
+carry-propagation delay
+                                                                           C4                        C3                        C2                       C1
+                                                                                   FA                           FA                       FA                       FA         C0
+
+  1. Speed-up propagation using techniques such as
+                                                                                      S3                        S2                       S1                       S0
+      •     carry lookahead
+      •     carry-select
+                                                                                A3        B3               A2    B2                 A1    B1                 A0    B0
+      •     logarithmic adder                                       CLA                         C3                        C2                       C1
+  2. Limit carry propagation to within a small number of bits             C4
+                                                                                  FA                        FA                       FA                       FA             C0
+
+  3. Trade-off: speed (or inversely, delay) versus logic cost
+                                                                                     S3                     S2                       S1                       S0
+
+                                                                  Instead of RCA, use n independent 1-bit FA-modules working in parallel;
+                                                                  no signal propagation through stages; directly generate all
+                                                                  carry-bits from inputs
+
+
+
+
+       Carry Lookahead Adder (CLA): Basic Idea                                    Carry-Lookahead Adder
+                                             ith-bit
+           A: an-1, an-2, .., ai…, a1, a0                            We can visualize carry “generate” and “propagate”
+                                                                     functions from another perspective:            a b
+           B: bn-1, bn-2, .., bi ,…,b1, b0
+      +                                                                                    Ci+1           = a.b + b. cin + a. cin
+           S: sn-1, sn-2, ……, s1, s0                                                                                                                     Ci + 1             FA    Cin
+
+                                             carry-bit ci                                                 = a.b + cin. (a+b)                                            Sum
+
+                                                                         • A column will generate a                                      • A column will propagate a
+ At the ith stage, carry will be generated for propagation                 carry out if ai AND bi are                                      carry if Ai or Bi is 1, i.e.,
+ to the next stage if and only if                                          both 1, i,e., gi = ai bi
+                                                                                                                                              pi = ai + bi
+  ai = bi = 1; => gi = ai bi ==> carry-generate function
+                                                                               • The carry out of a column (Ci) is:
+ or either ai or bi = 1, and previous carry ci -1 arrives here;                                ci+1 = ai bi + (ai + bi )ci = gi + pi ci
+ => pi = ai + bi => carry-propagate function
+                                    Basic Signals                                                                4-bit Carry-Lookahead Adder
+                                                                                                         c4 = g3 + g2 p3 + g1 p2p3 + g0p1p2p3 + c0p0p1p2p3
+     Generate signal:                                             gi = aibi
+     Propagate signal:                                            pi = ai + bi                           c3 = g2 + g1 p2 + g0 p1p2 + c0p0p1p2
+                                                                                                                                                                     gi = aibi
+                                                                                                         c2 = g1 + c1p1 = g1 + g0 p1 + c0p0p1                        pi = ai + bi
+     Carry recurrence
+
+                          ci+1 = gi + cipi                                                               c1 = g0 + c0 p0                                         ci+1 = gi + cipi
+
+
+
+
+Carry Lookahead Adder: Analysis                                                one AND-gate                                   Full Carry Lookahead
+                                                                               and
+    C1 = a0b0 + (a0+b0)c0 = g0 + p0c0                                          one OR-gate                       a3 b3              a2 b2              a1 b1              a0 b0
+    C2 = a1b1 + (a1+b1)c1 = g1 + p1c1 = g1 + p1g0 + p1p0c0
+    C3 = a2b2 + (a2+b2)c2 = g2 + p2c2 = g2 + p2g1 + p2p1g0 + p2p1p0c0
+    C4 = a3b3 + (a3+b3)c3 = g3 + p3c3 = g3 + p3g2 + p3p2g1 + p3p2p1g0 + p3p2p1p0c0
+                                                                                                                                                                                  cin
+    gi = aibi        pi = ai + bi             Cost = O(?); delay = O(?)
+                                                                                               inputs
+       a3 b3                         a2 b2                  a1 b1          a0 b0                          ...
+
+                                                                                                                         s3                 s2            s1              s0
+     g3         p3                  g2        p2       g1         p1      g0        p0        CLA
+                                                                                              logic
+                                                                                                                Theoretically, it is possible to derive each sum digit directly
+                                                                                         c0
+                                                                                                                from the inputs that affect it
+                                                                                         cost = O(n3);
+       2-level AND-OR logic
+                                                                                         delay = O(1)           Full carry-lookahead adder is impractical for large n
+
+            c4                           c3   carry-bits     c2                c1
+                                                                                         sum outputs
+                                    Independent FA blocks
+Solution 1: n-bit Hybrid CLA Adder                            12-Bit Hybrid Adder (CLA + RCA)
+                                                  A=            1101                            1001                                     1010
+                                                  B=            0111                            0110                                     1101
+                                                    A11      A10  A9    A8           A7        A6        A5        A4         A3        A2        A1        A0
+                                                          B11 B10    B9    B8             B7        B6        B5        B4         B3        B2        B1        B0
+ • Implementation of lookahead for the complete         p,g   p,g   p,g   p,g        p,g       p,g       p,g       p,g        p,g       p,g       p,g       p,g 0
+   adder is impractical because of cost
+                                                                                                                                                                  C0
+     • Divide n stages into smaller groups              Carry Generator              Carry Generator                          Carry Generator
+     • Full carry lookahead within each group
+                                                  C12                           C8                                       C4
+     • Ripple carry among groups
+                                                        S11   S10   S9    S8          S7        S6        S5        S4         S3        S2        S1        S0
+     • Compromise between cost and delay
+                                                   RCA                                                                                                  CLA
+                                                                            Trade-off: cost versus delay
+
+                                                               Another solution: 12-Bit Hybrid (RCA + CLA)??
+                                                                         Cost = O(?); delay = O(?)
+

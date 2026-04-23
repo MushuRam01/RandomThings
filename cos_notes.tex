@@ -1,0 +1,1809 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{amsmath}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue
+}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\setcounter{tocdepth}{2}
+
+\title{COS Open-Book Notes (Lectures 10--20)}
+\author{Ashoka University COS}\date{April 23, 2026}
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+\newpage
+
+\section*{How to Use This Document to Pass the Exam}
+\addcontentsline{toc}{section}{How to Use This Document to Pass the Exam}
+\begin{itemize}[leftmargin=*]
+  \item The \textbf{Index} (Table of Contents) lists every concept with real page numbers after PDF compilation. Use it as your entry point.
+  \item For each concept, read the \textbf{Step-by-step} list first, then the \textbf{Examples}. This mirrors how exam questions are structured.
+  \item Use the \textbf{Common Checks and Traps} line to avoid typical mistakes under time pressure.
+  \item If you are stuck, jump to the \textbf{MIPS Programming Guide} appendix for syntax, syscall, and pattern refreshers.
+  \item When you get additional past papers, we can replace or tune examples to match difficulty and style.
+\end{itemize}
+
+\section*{Diagram Placeholders}
+\addcontentsline{toc}{section}{Diagram Placeholders}
+These notes include placeholders for diagrams. Provide screenshots and place them in the \texttt{images/} folder as requested. I will wire them into the document.
+
+\newpage
+
+\section{Floating Point and Computer Arithmetic (Lectures 10--11)}
+
+\subsection{IEEE 754 Formats and Fields (L10, L11)}
+\textbf{What it is.} Floating point numbers are stored as sign, exponent, and fraction. Single precision: 1 sign bit, 8 exponent bits, 23 fraction bits. Double precision: 1 sign bit, 11 exponent bits, 52 fraction bits. Normalized value:
+\[\text{value} = (-1)^S \times (1.F) \times 2^{E-\text{bias}}\]
+where bias is 127 (single) or 1023 (double).
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Split the bits into S, E, and F.
+  \item Restore the hidden 1 for normalized values (E not all zeros or ones).
+  \item Compute $e = E - \text{bias}$.
+  \item Compute $(1.F)$ as a binary fraction and apply sign.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Single: $S=0, E=127, F=0$ gives $+1.0$.
+  \item Single: $S=1, E=128, F=1000...$ gives $-1.5 \times 2^1 = -3.0$.
+  \item Double: $S=0, E=1023, F=0$ gives $+1.0$.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Do not forget the hidden 1 for normalized values.
+
+\begin{figure}[h]
+\centering
+\fbox{\parbox{0.9\linewidth}{Diagram placeholder: IEEE 754 single and double field layout (L10)}}
+\end{figure}
+
+\subsection{Exponent Bias, Encoding, and Special Exponents (L10, L11)}
+\textbf{What it is.} Exponents are stored with a bias so they can be compared as unsigned. Exponent all-zeros and all-ones are reserved for special values.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Convert actual exponent $e$ to stored exponent $E = e + \text{bias}$.
+  \item If $E=0$, the number is zero or denormal.
+  \item If $E$ is all ones, the number is infinity or NaN.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Single: $e=-3 \Rightarrow E=124$ (binary 01111100).
+  \item Single: $e=0 \Rightarrow E=127$ (binary 01111111).
+  \item Single: $E=255$ implies infinity or NaN (check fraction).
+\end{enumerate}
+
+\textbf{Common checks and traps.} Do not treat $E=0$ as a normal exponent.
+
+\subsection{Normalized, Denormal, Zero, Infinity, and NaN (L10)}
+\textbf{What it is.} Normalized values use a hidden 1. Denormals use exponent $E=0$ and hidden bit 0 for gradual underflow. Special values use $E$ all ones.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Normalized: $1.F \times 2^{E-\text{bias}}$.
+  \item Denormal: $0.F \times 2^{1-\text{bias}}$ (single: $2^{-126}$).
+  \item Zero: $E=0$ and $F=0$ (both +0 and -0).
+  \item Infinity: $E$ all ones and $F=0$.
+  \item NaN: $E$ all ones and $F \ne 0$.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Smallest positive normal (single): $1.0 \times 2^{-126}$.
+  \item Smallest positive denormal (single): $2^{-149}$.
+  \item Overflow in a multiplication produces $+\infty$.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Denormals have lower precision and a hidden 0, not 1.
+
+\begin{figure}[h]
+\centering
+\fbox{\parbox{0.9\linewidth}{Diagram placeholder: Normalized and denormal range on real line (L10)}}
+\end{figure}
+
+\subsection{Encoding and Decoding Procedure (L11)}
+\textbf{What it is.} Steps to map between decimal values and IEEE 754 bit patterns.
+
+\textbf{Step-by-step (encode).}
+\begin{enumerate}[leftmargin=*]
+  \item Determine sign $S$.
+  \item Convert magnitude to binary and normalize as $1.F \times 2^e$.
+  \item Compute $E=e+\text{bias}$ and fill fraction bits.
+  \item Round to fit the fraction width.
+\end{enumerate}
+
+\textbf{Step-by-step (decode).}
+\begin{enumerate}[leftmargin=*]
+  \item Read $S$, $E$, $F$ and detect special values.
+  \item Restore the hidden bit (if normalized).
+  \item Compute the final value using $(-1)^S (1.F) 2^{E-\text{bias}}$.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Encode $-0.75$: $-0.11_2 = -1.1_2 \times 2^{-1}$, $E=126$, fraction $1000...$.
+  \item Decode $1\ 01111110\ 1100...$: sign negative, $E=126$, value $-0.875$.
+  \item Encode $6.5$: $110.1_2 = 1.101_2 \times 2^2$, $E=129$, fraction $1010...$.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Normalization changes exponent; do not drop it.
+
+\subsection{Floating-Point Addition and Subtraction Algorithm (L10, L11)}
+\textbf{What it is.} FP add/sub aligns exponents, adds significands, normalizes, and rounds. Signs are handled using 2's complement when needed.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Align binary points by shifting the smaller-exponent significand right.
+  \item Add or subtract significands (use 2's complement for opposite signs).
+  \item Normalize the result (shift left or right; adjust exponent).
+  \item Round to target precision; renormalize if rounding carries.
+  \item Check for overflow/underflow.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item $1.111_2 \times 2^{-1} + 1.011_2 \times 2^{-3}$: align, add, normalize, round.
+  \item $1.000_2 \times 2^{-3} + (-1.000_2) \times 2^{2}$: convert to 2's complement, add, normalize.
+  \item Opposite signs with close magnitudes: result needs leading-zero normalization.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Alignment can drop low bits; use guard/round/sticky.
+
+\subsection{Floating-Point Multiplication Algorithm (L10)}
+\textbf{What it is.} Multiply significands, add exponents (minus bias), compute sign, normalize, round, and check range.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Sign: $S = S_X \oplus S_Y$.
+  \item Exponent: $E_Z = E_X + E_Y - \text{bias}$.
+  \item Multiply significands (may be 2p bits).
+  \item Normalize (shift right at most 1; adjust exponent).
+  \item Round and check overflow/underflow.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item $(1.010)_2 \times 2^{-1} \times (-1.110)_2 \times 2^{-2}$: sign negative, exponent $-3$.
+  \item Multiply by $2^k$: only exponent changes (fast path).
+  \item Product of two numbers just under 2.0 may require normalization shift.
+\end{enumerate}
+
+\textbf{Common checks and traps.} The product can have 2 leading bits; normalize once.
+
+\subsection{Guard, Round, and Sticky Bits (L10)}
+\textbf{What it is.} Extra bits retained during alignment and arithmetic to improve rounding accuracy.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Guard bit: first bit beyond fraction.
+  \item Round bit: next bit after guard.
+  \item Sticky bit: OR of all remaining shifted-out bits.
+  \item Use these bits to decide round-to-nearest (or other mode).
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Guard=1, sticky=1 usually rounds up.
+  \item Guard=0, sticky=1 usually rounds down.
+  \item Guard=1, round=0, sticky=0 is a tie (round-to-even).
+\end{enumerate}
+
+\textbf{Common checks and traps.} Sticky is OR of all discarded bits, not just one bit.
+
+\subsection{Floating-Point Division Overview (L11)}
+\textbf{What it is.} FP division computes $A/B$ by forming the reciprocal of $B$'s significand and multiplying.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Compute sign: $S = S_A \oplus S_B$.
+  \item Exponent: $E_C = E_A - E_B + \text{bias}$.
+  \item Compute reciprocal of significand $1/S_B$ using iteration.
+  \item Multiply $S_A$ by $1/S_B$, normalize, and round.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Divide by power of two: only exponent changes.
+  \item $A/B$ with $B$ in $[1,2)$ fits the reciprocal iteration range.
+  \item $A/B$ with $B=1.0$ leaves significand unchanged.
+\end{enumerate}
+
+\textbf{Common checks and traps.} No remainder in FP division; treat as real division.
+
+\subsection{Goldschmidt Division Method (L11)}
+\textbf{What it is.} Computes reciprocal using multiplications and additions to approximate $1/S_B$.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Let $S_B = 1 + X$ where $0 < X < 1$.
+  \item Transform to $1/(1-Y)$ with $Y = X/2$ and iterate $(1+Y)(1+Y^2)(1+Y^4)...$.
+  \item Use FP multipliers to compute powers and accumulate.
+  \item Multiply by $S_A$ and adjust exponent.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item $S_B=1.11_2$ gives $X=0.11_2$ and $Y=0.001_2$.
+  \item Four multiplications and five additions give a usable reciprocal for single precision.
+  \item If $Y$ is small, higher powers like $Y^{32}$ become negligible.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Ensure $S_B$ is normalized so $1 < S_B < 2$.
+
+\subsection{Newton-Raphson Division Method (L11)}
+\textbf{What it is.} Finds reciprocal using root finding on $f(x)=1/x-b$ with fast convergence.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Choose $x_0$ from a lookup table, with $0.5 < x_0 \le 1$.
+  \item Iterate $x_{i+1} = x_i(2 - b x_i)$.
+  \item Stop when precision matches target (e.g., 23 bits for single).
+  \item Multiply by $S_A$ and normalize.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item $b=1.5$, $x_0=0.75$ gives $x_1=0.75(2-1.125)=0.65625$.
+  \item Error roughly squares each iteration; 5 iterations suffice for single precision.
+  \item If $x_0$ is poor, more iterations are needed.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Keep $b$ in $(1,2)$ by normalizing the input.
+
+\subsection{FP Hardware: Multi-Cycle and Pipelined Units (L10, L11)}
+\textbf{What it is.} FP adders and multipliers are more complex than integer units and usually take multiple cycles; they can be pipelined.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Compare exponents and align.
+  \item Perform significand operation.
+  \item Normalize and round.
+  \item Detect overflow/underflow.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item An FP adder may take several cycles; integer add is usually 1 cycle.
+  \item Pipelined FP units allow throughput > 1 op per cycle.
+  \item A slow FP unit sets the clock period if it is on the critical path.
+\end{enumerate}
+
+\textbf{Common checks and traps.} FP pipelines improve throughput, not single-op latency.
+
+\subsection{MIPS FPU Architecture (L10)}
+\textbf{What it is.} The FP unit is coprocessor 1 with its own 32 registers $f0$--$f31$.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Single precision uses one register.
+  \item Double precision uses even-odd pairs ($f0/f1$, $f2/f3$, ...).
+  \item FP ops only use FP registers.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Use $f2$ for a single precision value and $f4/f5$ for a double.
+  \item $add.s f0, f1, f6$ is a single-precision add.
+  \item $mul.d f4, f4, f6$ uses double-precision pairs.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Double precision must start at even register numbers.
+
+\subsection{MIPS FP Instructions and Data Movement (L10)}
+\textbf{What it is.} Separate FP arithmetic, load/store, move, convert, and compare instructions.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Use \texttt{add.s/sub.s/mul.s/div.s} for single.
+  \item Use \texttt{add.d/sub.d/mul.d/div.d} for double.
+  \item Use \texttt{lwc1/swc1} and \texttt{ldc1/sdc1} for loads/stores.
+  \item Use \texttt{mfc1/mtc1} to move between GPR and FPR.
+  \item Use \texttt{c.eq.s/c.lt.s/c.le.s} and \texttt{bc1t/bc1f} for FP branches.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Load, add, store: \texttt{lwc1 f2, 0(t0); lwc1 f4, 4(t0); add.s f6, f2, f4; swc1 f6, 8(t0)}.
+  \item Convert int to float: \texttt{mtc1 t0, f0; cvt.s.w f2, f0}.
+  \item Compare and branch: \texttt{c.lt.s f2, f4; bc1t label}.
+\end{enumerate}
+
+\textbf{Common checks and traps.} FP branches use the FP condition flag, not integer flags.
+
+\subsection{FP Syscalls and Example (L10)}
+\textbf{What it is.} MARS syscalls include read/print float and double, and FP arguments use $f12$.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Set $v0=2$ to print float, $v0=3$ for double.
+  \item Place value in $f12$ and call \texttt{syscall}.
+  \item For reading, use $v0=6$ (float) or $v0=7$ (double).
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Print float: \texttt{li v0,2; mov.s f12,f0; syscall}.
+  \item Read float: \texttt{li v0,6; syscall} (result in $f0$).
+  \item Fahrenheit to Celsius: $C = (5.0/9.0)(F-32.0)$ using \texttt{sub.s, div.s, mul.s}.
+\end{enumerate}
+
+\textbf{Common checks and traps.} $f12$ is the argument register for FP prints.
+
+\subsection{Integer Multiplication Complexity (L10)}
+\textbf{What it is.} Classical and faster multiplication algorithms have different asymptotic costs.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item School method: $\Theta(n^2)$ bit operations.
+  \item Karatsuba: reduce 4 multiplies to 3, $O(n^{\log_2 3}) \approx O(n^{1.585})$.
+  \item Schonhage--Strassen: $O(n \log n \log \log n)$.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item For $n=1024$, Karatsuba beats $n^2$ for large enough $n$.
+  \item Karatsuba splits 16-bit numbers into two 8-bit halves.
+  \item As $n$ grows, $n \log n \log \log n$ becomes far smaller than $n^2$.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Asymptotic improvement appears only for large $n$.
+
+\section{Integer Arithmetic and ALU (Lectures 11--12)}
+
+\subsection{Unsigned Shift-Add Multiplier (L12)}
+\textbf{What it is.} Hardware multiplication by repeated add and shift using a 64-bit product register.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Initialize product with multiplier in the low half, zeros in the high half.
+  \item If product LSB is 1, add multiplicand to the high half.
+  \item Shift the entire product right by 1.
+  \item Repeat for word width (e.g., 32 iterations).
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item $0010_2 \times 0110_2 = 1100_2$ via four iterations.
+  \item $1000_2 \times 1001_2$ adds only on cycles where LSB is 1.
+  \item Multiply by 0 yields zero with no effective adds.
+\end{enumerate}
+
+\textbf{Common checks and traps.} The add uses the high half of the product, not the low.
+
+\begin{figure}[h]
+\centering
+\fbox{\parbox{0.9\linewidth}{Diagram placeholder: Shift-add multiplier datapath (L12)}}
+\end{figure}
+
+\subsection{Signed Multiplication and Sign Handling (L12)}
+\textbf{What it is.} Signed product sign is XOR of operand signs; multiply magnitudes, then fix sign.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Compute sign of result: $S = S_A \oplus S_B$.
+  \item Convert operands to positive magnitudes.
+  \item Multiply as unsigned.
+  \item If $S=1$, negate the product.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item $(-3) \times (+2) = -6$.
+  \item $(-3) \times (-2) = +6$.
+  \item $(-8) \times 0 = 0$ (sign irrelevant).
+\end{enumerate}
+
+\textbf{Common checks and traps.} Ensure operands are converted using two's complement rules.
+
+\subsection{Booth's Encoding and Algorithm (L12)}
+\textbf{What it is.} Booth's algorithm reduces runs of 1s in the multiplier to fewer add/sub operations.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Look at current bit and the bit to the right (previous bit).
+  \item 10: subtract multiplicand; 01: add multiplicand; 00 or 11: no op.
+  \item Arithmetic shift right after each step.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Multiplier 01111 gives $16x - x$ (one subtract, shifts).
+  \item Multiplier 1101 triggers a subtract at 10 and add at 01.
+  \item A run of 1s uses two operations, not one per bit.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Use arithmetic shift for signed values.
+
+\begin{figure}[h]
+\centering
+\fbox{\parbox{0.9\linewidth}{Diagram placeholder: Booth encoding table and example (L12)}}
+\end{figure}
+
+\subsection{Full Adder, Ripple-Carry Adder, and 2's Complement Subtraction (L11, L12)}
+\textbf{What it is.} A full adder computes sum and carry; ripple-carry chains adders; subtraction uses two's complement.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Full adder: $\text{Sum}=A\oplus B\oplus C_{in}$, $C_{out}=AB+BC_{in}+AC_{in}$.
+  \item Ripple-carry: chain $n$ full adders; carry propagates left.
+  \item Subtraction: invert $B$ and set $C_{in}=1$ to add $A + (\sim B + 1)$.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item 1-bit: $A=1, B=1, C_{in}=0$ gives Sum=0, Carry=1.
+  \item 4-bit RCA delay is about 4 full-adder delays.
+  \item $7-3$ in 4-bit two's complement: $0111 + 1101 = 0100$.
+\end{enumerate}
+
+\textbf{Common checks and traps.} RCA delay is $O(n)$, which sets the clock.
+
+\subsection{Carry Lookahead Adder (CLA) (L11)}
+\textbf{What it is.} CLA uses generate/propagate to compute carries in parallel.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Generate: $g_i = a_i b_i$.
+  \item Propagate: $p_i = a_i + b_i$.
+  \item Carry: $c_{i+1} = g_i + p_i c_i$.
+  \item Expand for 4-bit group to compute $c_1..c_4$ directly.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Compute $c_1 = g_0 + p_0 c_0$ for given bits.
+  \item For a 4-bit group, $c_4$ uses $g_3, p_3, g_2, ...$.
+  \item CLA reduces delay compared to RCA at the cost of extra logic.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Use OR for propagate in these slides, not XOR.
+
+\subsection{Hybrid CLA/RCA Adders (L11)}
+\textbf{What it is.} Combine fast CLA within groups and ripple between groups to balance cost and speed.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Split the adder into groups (e.g., 4-bit groups).
+  \item Use CLA inside each group to compute local carries.
+  \item Ripple the group carries between groups.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item 12-bit adder as three 4-bit CLA groups.
+  \item Larger groups reduce ripple levels but increase logic cost.
+  \item Compare 12-bit pure RCA vs hybrid CLA+RCA delay.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Full CLA for large n has impractical cost.
+
+\subsection{32-bit MIPS ALU Design (L12)}
+\textbf{What it is.} A 32-bit ALU built from 1-bit slices supports AND, OR, ADD, SUB, and SLT.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Use control lines (Binvert, Op1, Op0) to select operation.
+  \item For SUB, invert B and set carry-in to 1.
+  \item For SLT, use the sign of $A-B$ and set bit 0.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item AND: Binvert=0, Op=00.
+  \item ADD: Binvert=0, Op=10.
+  \item SUB: Binvert=1, Op=10.
+\end{enumerate}
+
+\textbf{Common checks and traps.} SLT is based on signed comparison of $A-B$.
+
+\subsection{Overflow Detection and SLT Support (L12)}
+\textbf{What it is.} Signed overflow in add/sub occurs when carry into MSB differs from carry out.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Compute carries into and out of bit 31.
+  \item Overflow = carry31 XOR carry32.
+  \item SLT uses the sign of the subtraction result with overflow adjustment.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item $0x7FFFFFFF + 1$ overflows to negative.
+  \item $0x80000000 - 1$ overflows to positive.
+  \item SLT sets result to 1 if $A < B$ else 0.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Overflow rules differ for signed vs unsigned adds.
+
+\subsection{MIPS Instruction Execution Cycle (L12)}
+\textbf{What it is.} Classic 5-stage flow: IF, ID/RR, EX, MEM, WB.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item IF: fetch instruction and compute PC+4.
+  \item ID/RR: decode and read registers.
+  \item EX: ALU operation or address calculation.
+  \item MEM: data memory access for loads/stores.
+  \item WB: write result back to register file.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item R-type: uses IF, ID, EX, WB (MEM is idle).
+  \item lw: uses all 5 stages.
+  \item beq: uses IF, ID, EX (MEM/WB idle in single-cycle view).
+\end{enumerate}
+
+\textbf{Common checks and traps.} Different instruction types still share the same stage order.
+
+\subsection{Combinational vs Sequential Elements and Register File (L12)}
+\textbf{What it is.} Combinational logic has no memory (ALU, mux). Sequential elements store state (registers).
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Register file reads two registers and writes one per cycle.
+  \item Writes occur on the clock edge; reads are combinational.
+  \item Control signals gate the write operation.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item A register holds data across cycles using D flip-flops.
+  \item Read rs and rt while writing rd in the same cycle.
+  \item Write enable 0 leaves register unchanged.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Writes are edge-triggered; do not assume immediate updates mid-cycle.
+
+\section{Processor Design: Single-Cycle MIPS (Lectures 13--14)}
+
+\subsection{ISA-Driven Datapath Design and Building Blocks (L13)}
+\textbf{What it is.} Start from ISA requirements and map to hardware blocks: ALU, registers, muxes, memory, adders.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Identify instruction types (R, load/store, branch, jump).
+  \item List required operations per instruction (read reg, ALU, memory, write reg).
+  \item Choose hardware blocks to cover all operations.
+  \item Connect blocks with multiplexers for shared paths.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item R-type needs register read, ALU, register write.
+  \item Load needs ALU for address and memory read.
+  \item Branch needs register compare and PC update.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Avoid assuming a block can do two functions in one cycle.
+
+\begin{figure}[h]
+\centering
+\fbox{\parbox{0.9\linewidth}{Diagram placeholder: Single-cycle datapath overview with control signals (L13--L14)}}
+\end{figure}
+
+\subsection{R-Type Datapath (L13)}
+\textbf{What it is.} Reg-reg instructions read two registers, compute in ALU, and write to rd.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Read rs and rt from register file.
+  \item Select ALU operation based on funct.
+  \item Write result to rd.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item add rd, rs, rt: RegDst=1, ALUSrc=0, RegWrite=1.
+  \item and rd, rs, rt: ALUOp selects AND.
+  \item slt rd, rs, rt: ALU computes set-less-than.
+\end{enumerate}
+
+\textbf{Common checks and traps.} rd is destination for R-type, not rt.
+
+\subsection{Load Datapath (L13)}
+\textbf{What it is.} lw computes address in ALU, reads memory, writes to rt.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Read rs and sign-extend immediate.
+  \item ALU adds rs + immediate for address.
+  \item Read memory and write data to rt.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item lw rt, 16(rs): ALUSrc=1, MemRead=1, MemtoReg=1.
+  \item Base+offset address uses signed immediate.
+  \item lw uses RegDst=0 because rt is destination.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Immediate must be sign-extended for address calculation.
+
+\subsection{Store Datapath (L13)}
+\textbf{What it is.} sw computes address in ALU and writes register value to memory.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Read rs (base) and rt (data).
+  \item ALU adds rs + immediate for address.
+  \item Write rt data to memory.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item sw rt, 0(rs): MemWrite=1, RegWrite=0.
+  \item Store uses ALUSrc=1 to add offset.
+  \item sw does not write back to register file.
+\end{enumerate}
+
+\textbf{Common checks and traps.} sw uses rt as source, not destination.
+
+\subsection{Branch Datapath (L13)}
+\textbf{What it is.} beq compares rs and rt and conditionally updates PC.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Read rs and rt.
+  \item ALU subtracts to set Zero flag.
+  \item Sign-extend and shift immediate left 2.
+  \item Add to PC+4 for target address.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item beq rs, rt, imm: Branch=1, ALUOp=sub.
+  \item If Zero=1, PCsrc selects branch target.
+  \item If Zero=0, PC continues with PC+4.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Branch offset is word-aligned, so shift left by 2.
+
+\subsection{Combining Datapaths with Multiplexers (L13)}
+\textbf{What it is.} Different instructions reuse hardware with muxes to select inputs and outputs.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Use ALUSrc mux to choose register vs immediate.
+  \item Use RegDst mux to choose rd vs rt.
+  \item Use MemtoReg mux to choose ALU vs memory data.
+  \item Use PCsrc mux for PC+4 vs branch target.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item lw uses ALUSrc=1 and MemtoReg=1.
+  \item R-type uses RegDst=1 and MemtoReg=0.
+  \item beq uses PCsrc=1 only if Zero=1.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Do not wire two sources together without a mux.
+
+\subsection{Control Signals for Single-Cycle MIPS (L14)}
+\textbf{What it is.} Control signals drive muxes and memory operations based on opcode.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Decode opcode to generate RegDst, ALUSrc, MemRead, MemWrite, MemtoReg, RegWrite, Branch, ALUOp.
+  \item Set control values for each instruction type.
+  \item Feed ALUOp to ALU control to select function.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item R-type: RegDst=1, ALUSrc=0, RegWrite=1, MemRead=0, MemWrite=0.
+  \item lw: RegDst=0, ALUSrc=1, MemRead=1, MemtoReg=1, RegWrite=1.
+  \item sw: ALUSrc=1, MemWrite=1, RegWrite=0.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Branch control also depends on Zero output.
+
+\subsection{ALU Control Logic (L14)}
+\textbf{What it is.} Combines ALUOp and funct to select ALU operation.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item ALUOp=00 for load/store (add).
+  \item ALUOp=01 for beq (subtract).
+  \item ALUOp=10 for R-type (use funct).
+  \item Map funct to AND/OR/ADD/SUB/SLT codes.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item funct 100000 -> add.
+  \item funct 100010 -> subtract.
+  \item funct 101010 -> slt.
+\end{enumerate}
+
+\textbf{Common checks and traps.} ALUOp only distinguishes classes; funct picks final op.
+
+\subsection{Main Control Unit Design (L14)}
+\textbf{What it is.} A combinational controller that outputs control signals from opcode bits.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Use opcode bits as inputs to logic.
+  \item Produce control signals for datapath.
+  \item Verify each instruction's control vector.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item For opcode 0 (R-type), RegDst=1 and ALUOp=10.
+  \item For opcode 35 (lw), MemRead=1 and MemtoReg=1.
+  \item For opcode 4 (beq), Branch=1 and ALUOp=01.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Single-cycle control is purely combinational.
+
+\subsection{Jump Instruction Handling (L14)}
+\textbf{What it is.} j uses a 26-bit target combined with upper PC bits.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Take upper 4 bits of PC+4.
+  \item Concatenate 26-bit target and 2 zeros (word aligned).
+  \item Select this as the next PC when jump opcode detected.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Jump to 0x00401234 uses top 4 bits of PC+4.
+  \item j does not read registers.
+  \item j has a dedicated PC mux select line.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Jump address is pseudo-absolute within current 256MB region.
+
+\subsection{Critical Path and Performance Equation (L14)}
+\textbf{What it is.} Single-cycle CCT is set by the longest instruction path, typically load.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Find the longest datapath: IMem -> RegFile -> ALU -> DMem -> RegFile.
+  \item Set CCT to cover that path.
+  \item CPU time: $\text{IC} \times \text{CPI} \times \text{CCT}$.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Load has the longest path, so it sets clock period.
+  \item Fast R-type instructions still wait for long CCT.
+  \item Pipelining lowers CCT at the cost of higher CPI.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Single-cycle design violates "make the common case fast".
+
+\subsection{Logic Faults and Stuck-at Errors (L14)}
+\textbf{What it is.} A signal line stuck at 0 or 1 can cause certain instructions to fail.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Identify which control or data line is stuck.
+  \item Determine which instructions depend on that line.
+  \item Evaluate functional impact (safe vs catastrophic).
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item If ALUSrc stuck at 0, lw/sw will fail (need immediate).
+  \item If RegWrite stuck at 0, all reg writes fail.
+  \item If Branch control stuck at 1, PC updates incorrectly.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Some faults break only a subset of instructions.
+
+\section{Pipelining and Hazards (Lectures 15--18)}
+
+\subsection{Pipelining Basics: Throughput vs Latency (L15)}
+\textbf{What it is.} Pipelining overlaps instruction stages to increase throughput without reducing single-instruction latency.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Split execution into stages (IF, ID, EX, MEM, WB).
+  \item Start a new instruction each cycle.
+  \item After pipeline fills, complete roughly one instruction per cycle.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Laundry analogy: 4 loads complete faster with pipeline than sequential.
+  \item A 5-stage pipeline ideally gives near 5x throughput for long programs.
+  \item Latency of one instruction still spans 5 stages.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Pipelining boosts throughput, not single-op speed.
+
+\subsection{MIPS 5-Stage Pipeline and Diagram (L15)}
+\textbf{What it is.} MIPS pipeline stages: IF, ID/RR, EX, MEM, WB.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item IF: fetch instruction and PC+4.
+  \item ID/RR: decode and read registers.
+  \item EX: ALU operation or address calculation.
+  \item MEM: access data memory.
+  \item WB: write result back.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Pipeline diagram shows 5 instructions active at cycle 5.
+  \item R-type uses MEM as NOP stage for uniformity.
+  \item Load uses all stages; store uses MEM but no WB.
+\end{enumerate}
+
+\textbf{Common checks and traps.} All instructions occupy the same number of stages (with NOPs).
+
+\begin{figure}[h]
+\centering
+\fbox{\parbox{0.9\linewidth}{Diagram placeholder: 5-stage pipeline timeline (L15)}}
+\end{figure}
+
+\subsection{Pipeline Terminology: Fill, Full, Drain, Balance (L15)}
+\textbf{What it is.} Pipeline fills, becomes full, then drains. Speedup is limited by the slowest stage.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Fill: initial cycles before all stages are active.
+  \item Full: steady state, one completion per cycle.
+  \item Drain: final cycles after last instruction enters.
+  \item Balance stages to minimize cycle time.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item 5-stage pipeline becomes full at cycle 5.
+  \item If EX is longest stage, CCT equals EX time.
+  \item Unbalanced stages reduce speedup below pipeline depth.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Speedup $< k$ even without hazards.
+
+\subsection{Pipeline Registers and Overhead (L15, L16)}
+\textbf{What it is.} Latches between stages hold intermediate values; they add overhead.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Insert registers between each pair of stages.
+  \item Propagate instruction bits and data each cycle.
+  \item Account for latch delay in CCT.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item IF/ID holds instruction and PC+4.
+  \item EX/MEM holds ALU result and control bits.
+  \item Latch overhead reduces ideal speedup.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Pipeline registers must carry control signals too.
+
+\subsection{Structural Hazards (L16)}
+\textbf{What it is.} Two stages need the same resource in the same cycle.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Identify shared resources (e.g., single memory).
+  \item If conflict, stall one instruction (bubble).
+  \item Prefer separate instruction and data memories.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item IF and MEM both need memory in the same cycle.
+  \item Separate I-cache and D-cache removes the conflict.
+  \item Multi-ported memory is another solution.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Structural hazards are solved by hardware duplication or stalls.
+
+\subsection{Data Hazards: RAW, WAR, WAW (L16, L17)}
+\textbf{What it is.} An instruction depends on data from a previous instruction that is not yet written.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item RAW: read after write (most common).
+  \item WAW: write after write (ordering issue).
+  \item WAR: write after read (possible in out-of-order).
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item RAW: \texttt{add \$t1, ...} then sub uses \texttt{\$t1}.
+  \item WAW: \texttt{lw} writes \texttt{\$t1}, then \texttt{sub} writes \texttt{\$t1} earlier.
+  \item WAR: out-of-order write overtakes read.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Classic in-order MIPS has RAW hazards; WAR/WAW are rare.
+
+\subsection{Half-Cycle Register Write/Read Fix (L16)}
+\textbf{What it is.} Write in first half-cycle, read in second half-cycle to reduce RAW stalls.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Write back at beginning of cycle.
+  \item Allow ID/RR to read updated value in same cycle.
+  \item This removes some, not all, RAW hazards.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item \texttt{add} writes \texttt{\$t1} in WB half-cycle; next instruction reads in ID.
+  \item Removes one stall in some sequences.
+  \item Still fails for load-use when value not ready.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Load data arrives after MEM, so half-cycle does not fix load-use.
+
+\subsection{Load-Use Hazards and Bubbles (L16, L17)}
+\textbf{What it is.} A load followed immediately by a consumer needs a stall cycle.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Detect that the next instruction uses the load destination.
+  \item Insert a bubble (NOP) to delay the consumer.
+  \item Continue once data is available.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item \texttt{lw \$t1, 0(\$t2)} then \texttt{add \$t3, \$t1, \$t4} requires 1 stall.
+  \item With two consumers, multiple stalls may be needed.
+  \item Inserting a useful independent instruction can hide the stall.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Forwarding cannot bring data backward in time.
+
+\subsection{Forwarding (Bypassing) (L16, L17)}
+\textbf{What it is.} Use ALU or MEM results directly as ALU inputs for later instructions.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Add EX->EX and MEM->EX bypass paths.
+  \item Use forwarding control to select newest value.
+  \item Eliminate most RAW hazards.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item add then sub uses forwarded EX result.
+  \item MEM->EX forwards load data once in MEM/WB.
+  \item With forwarding, many sequences drop from 10 to 8 cycles.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Load-use still needs 1 stall even with forwarding.
+
+\begin{figure}[h]
+\centering
+\fbox{\parbox{0.9\linewidth}{Diagram placeholder: Forwarding paths and hazard detection (L17)}}
+\end{figure}
+
+\subsection{Software Interlocking and Scheduling (L17)}
+\textbf{What it is.} Compiler reorders instructions or inserts NOPs to avoid hazards.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Identify dependent instructions.
+  \item Move independent instructions into delay slots.
+  \item Insert NOPs when no safe instruction exists.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Swap a load with a later independent add.
+  \item Insert a NOP after load when no independent work exists.
+  \item Reorder loop body to hide load latency.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Reordering must preserve program semantics.
+
+\subsection{Control Hazards and Branch Penalty (L17, L18)}
+\textbf{What it is.} The next PC is unknown until branch outcome is known.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item In classic MIPS, branch target is resolved in MEM stage.
+  \item This causes a 3-cycle branch penalty.
+  \item Stall or flush instructions until outcome is known.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item beq followed by lw: lw may be squashed if branch taken.
+  \item 3 stalls per branch if no prediction is used.
+  \item Moving compare earlier reduces penalty to 1.
+\end{enumerate}
+
+\textbf{Common checks and traps.} PC update point determines penalty length.
+
+\begin{figure}[h]
+\centering
+\fbox{\parbox{0.9\linewidth}{Diagram placeholder: Branch hazard pipeline timing (L18)}}
+\end{figure}
+
+\subsection{Early Branch Resolution (L18)}
+\textbf{What it is.} Move compare and target computation to ID/RR to reduce stalls.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Add a zero-checker in ID.
+  \item Compute branch target in ID.
+  \item Update PC earlier if branch is taken.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Reduces branch penalty from 3 to 1 cycle.
+  \item Can create new hazards if branch depends on prior load.
+  \item Needs extra ALU hardware for ID stage.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Early branch logic can conflict with earlier instruction writes.
+
+\subsection{Branch Prediction (L18)}
+\textbf{What it is.} Predict branch outcome to avoid stalls; correct prediction avoids penalty.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Predict-not-taken: fetch PC+4 by default.
+  \item Static prediction: backward taken, forward not-taken.
+  \item Dynamic prediction: keep history per branch.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item 47\% of MIPS branches are not taken on average.
+  \item A loop branch is usually taken; static predictor exploits this.
+  \item Dynamic prediction stores last outcome in a history table.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Wrong prediction requires pipeline flush.
+
+\subsection{1-bit vs 2-bit Predictors (L18)}
+\textbf{What it is.} 2-bit predictors reduce flip-flopping on loop exits.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item 1-bit predictor flips on every misprediction.
+  \item 2-bit predictor changes prediction only after two misses.
+  \item Improves accuracy for loop branches.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Inner loop exit causes two mispredictions with 1-bit predictor.
+  \item 2-bit predictor stays in "taken" state through one miss.
+  \item For random branches, 2-bit may not help much.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Prediction state must be updated on actual outcome.
+
+\subsection{Delay Slots (L18)}
+\textbf{What it is.} Compiler places a useful instruction after a branch to fill the delay slot.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Identify the branch delay slot.
+  \item Move a safe instruction into that slot.
+  \item If none exists, insert NOP.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Fill with an instruction from fall-through path.
+  \item Fill with an instruction from taken path if safe.
+  \item Use NOP if reordering breaks correctness.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Delay-slot instruction always executes, taken or not.
+
+\subsection{Pipeline Performance with Stalls (L18)}
+\textbf{What it is.} Pipeline speedup drops with stall cycles.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Ideal CPI for pipeline is 1.
+  \item Actual CPI = $1 + \text{avg stall cycles per instruction}$.
+  \item Speedup $= \text{pipe depth} / \text{CPI}$.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item With branch frequency 0.2 and penalty 1: CPI = 1 + 0.2.
+  \item With load-use stalls 0.1 per instruction: CPI = 1.1.
+  \item Speedup of 5-stage pipeline with CPI 1.25 is 4.0.
+\end{enumerate}
+
+\textbf{Common checks and traps.} CPI uses average stalls, not worst-case.
+
+\section{Memory Hierarchy, Caches, and Virtual Memory (Lectures 18--20)}
+
+\subsection{Memory Hierarchy Levels and Tradeoffs (L18, L20)}
+\textbf{What it is.} Small, fast memories are costly; large memories are slow. Hierarchy bridges the gap.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Registers and L1 cache are fastest and smallest.
+  \item Lower levels (L2, L3, DRAM, disk) are larger and slower.
+  \item Data moves up and down the hierarchy in blocks.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item L1 cache is tens of KB; DRAM is GBs.
+  \item Disk is orders of magnitude slower than DRAM.
+  \item Tertiary storage (tape/cloud) is largest and slowest.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Faster memory almost always costs more per bit.
+
+\begin{figure}[h]
+\centering
+\fbox{\parbox{0.9\linewidth}{Diagram placeholder: Memory hierarchy pyramid (L18)}}
+\end{figure}
+
+\subsection{Principle of Locality (L18)}
+\textbf{What it is.} Programs reuse data nearby in time (temporal) and space (spatial).
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Temporal locality: recent data likely used again.
+  \item Spatial locality: nearby addresses likely accessed soon.
+  \item Caches exploit both by storing recent blocks.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Loop counter reused each iteration (temporal).
+  \item Sequential array access (spatial).
+  \item Instruction stream has strong spatial locality.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Locality is empirical, not guaranteed.
+
+\subsection{Cache Basics: Hit, Miss, Block Size, I-Cache and D-Cache (L18)}
+\textbf{What it is.} Cache stores blocks from lower memory. Hits are fast; misses incur penalty.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item CPU access checks cache first.
+  \item On hit: serve from cache.
+  \item On miss: fetch block from lower level.
+  \item I-cache holds instructions; D-cache holds data.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Hit time 1 cycle, miss penalty 100 cycles.
+  \item A 16-word block fetches adjacent words.
+  \item Separate I-cache and D-cache avoid structural hazards.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Block size is in words/bytes, not bits.
+
+\subsection{Direct-Mapped Cache Mapping, Tags, and Valid Bit (L18, L19)}
+\textbf{What it is.} Each memory block maps to exactly one cache line, identified by index and tag.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Split address into tag, index, and offset.
+  \item Use index to select cache line.
+  \item Compare tag and valid bit to decide hit/miss.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item 5-bit address, 8-line cache: 3-bit index.
+  \item Valid bit starts at 0 to avoid garbage hits.
+  \item Tag mismatch causes conflict miss.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Index is typically low-order bits above offset.
+
+\begin{figure}[h]
+\centering
+\fbox{\parbox{0.9\linewidth}{Diagram placeholder: Direct-mapped address split and mapping (L18, L19)}}
+\end{figure}
+
+\subsection{Direct-Mapped Cache Example (L18)}
+\textbf{What it is.} Step-by-step trace of hits and misses for a direct-mapped cache.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Start with all valid bits 0.
+  \item Process each address; compute index and tag.
+  \item Update cache line on misses.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Address sequence 22, 26, 22, 26, 16, 3, 16, 18.
+  \item First accesses are misses; repeats may hit if not evicted.
+  \item Conflicts occur when two blocks map to same index.
+\end{enumerate}
+
+\textbf{Common checks and traps.} A hit requires both tag match and valid=1.
+
+\subsection{Cache Miss Types (L19, L20)}
+\textbf{What it is.} Misses are classified as compulsory, capacity, or conflict.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Compulsory: first time a block is accessed.
+  \item Capacity: cache cannot hold all working set blocks.
+  \item Conflict: direct-mapped collisions or low associativity.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item First reference in a program is compulsory.
+  \item Large array that exceeds cache size causes capacity misses.
+  \item Two hot arrays mapping to same index cause conflict misses.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Conflict misses can be reduced by higher associativity.
+
+\subsection{AMAT and AMSC Formulas (L19, L20)}
+\textbf{What it is.} Average Memory Access Time and memory stall cycles quantify cache impact.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item AMAT = hit time + (miss rate x miss penalty).
+  \item AMSC = (memory requests per instruction) x miss rate x miss penalty.
+  \item CPU time = IC x (Ideal CPI + AMSC) x CCT.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Hit 1 cycle, miss 20 cycles, miss rate 5\%: AMAT = 2 cycles.
+  \item If 36\% of instructions are loads/stores, D-cache miss adds 1.44 cycles.
+  \item CPI goes from 2 to 5.44 in the example from lecture.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Use fractions, not percentages, in formulas.
+
+\subsection{Cache Management Policies (L19, L20)}
+\textbf{What it is.} Placement, identification, replacement, and write strategy decisions.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Placement: direct-mapped, set-associative, fully associative.
+  \item Identification: tag + index + valid bit.
+  \item Replacement: LRU, LFU, random.
+  \item Writes: write-through or write-back.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Direct-mapped has no replacement choice.
+  \item 2-way set-associative chooses one of 2 lines.
+  \item Write-back uses a dirty bit per line.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Write policies affect miss handling details.
+
+\subsection{Write-Through vs Write-Back and Dirty Bit (L19)}
+\textbf{What it is.} Write-through updates memory immediately; write-back delays until eviction.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Write-through: update cache and memory on each store.
+  \item Write-back: update cache and set dirty bit.
+  \item On eviction, if dirty=1, write line to memory.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Write-through simplifies consistency but increases memory traffic.
+  \item Write-back reduces traffic but needs dirty bit.
+  \item A write miss in write-back may trigger write of dirty victim.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Write-back can cause a write on a read miss.
+
+\subsection{Write-Allocate vs No-Write-Allocate (L19)}
+\textbf{What it is.} On a write miss, decide whether to bring the block into cache.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Write-allocate: fetch block, then write into cache.
+  \item No-write-allocate: write directly to memory.
+  \item Often combined as write-back + write-allocate or write-through + no-write-allocate.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Write-through + no-write-allocate avoids loading on write miss.
+  \item Write-back + write-allocate keeps block for future writes.
+  \item Write buffer allows CPU to continue while memory writes complete.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Use consistent write policy pairs.
+
+\subsection{Set-Associative and Fully Associative Caches (L19, L20)}
+\textbf{What it is.} Allow multiple possible cache lines per index to reduce conflicts.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item 2-way or n-way set-associative: search all entries in a set.
+  \item Fully associative: any block can go anywhere.
+  \item More associativity reduces conflict misses but increases hit time.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item For 8 lines, direct-mapped = 1-way, 2-way has 4 sets.
+  \item Fully associative needs tag compare for all lines.
+  \item 2-way set-associative can reduce misses from 5 to 4 in example.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Higher associativity needs more comparators.
+
+\begin{figure}[h]
+\centering
+\fbox{\parbox{0.9\linewidth}{Diagram placeholder: Set-associative cache structure (L19)}}
+\end{figure}
+
+\subsection{Replacement Policies (LRU, LFU, Random) (L19)}
+\textbf{What it is.} Choose which line to evict on a miss when multiple choices exist.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item LRU: evict the least recently used line.
+  \item LFU: evict the least frequently used line.
+  \item Random: evict a random line, often near-LRU performance.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item 2-way cache uses 1 bit to track LRU.
+  \item 4-way LRU needs more state and logic.
+  \item Random replacement is simplest for high associativity.
+\end{enumerate}
+
+\textbf{Common checks and traps.} LRU becomes complex as associativity grows.
+
+\subsection{Cache Performance Example (L19)}
+\textbf{What it is.} Compute CPI impact from I-cache and D-cache misses.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Compute I-cache miss cycles: miss rate x penalty.
+  \item Compute D-cache miss cycles: load/store fraction x miss rate x penalty.
+  \item Add to ideal CPI.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item I-miss 2\% with 100-cycle penalty adds 2 cycles.
+  \item D-miss 4\% with 36\% loads adds 1.44 cycles.
+  \item CPI = 2 + 2 + 1.44 = 5.44.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Separate I and D miss contributions.
+
+\subsection{Multiword Blocks, Critical Word First, Early Restart (L20)}
+\textbf{What it is.} Larger blocks exploit spatial locality but increase miss penalty; critical word first reduces effective penalty.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item On miss, fetch an entire block of multiple words.
+  \item Deliver the requested word first (critical word first).
+  \item Resume CPU early while the rest of block arrives.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item 16-word block reduces compulsory misses for sequential access.
+  \item Early restart reduces perceived miss penalty.
+  \item Too-large blocks increase conflict and capacity misses.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Block size tradeoff depends on workload.
+
+\subsection{Cache Optimization Knobs (L20)}
+\textbf{What it is.} Change block size, capacity, associativity, or add levels to improve performance.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Increase block size to reduce compulsory misses.
+  \item Increase cache size to reduce capacity misses.
+  \item Increase associativity to reduce conflict misses.
+  \item Use multi-level caches or software reordering.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Loop interchange improves spatial locality.
+  \item L2 cache reduces miss penalty for L1 misses.
+  \item Higher associativity increases hit time and power.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Improvements can trade one miss type for another.
+
+\subsection{Virtual Memory Basics (L20)}
+\textbf{What it is.} MM acts as a cache for disk; programs see a larger virtual address space.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item CPU generates logical (virtual) addresses.
+  \item OS and hardware translate to physical addresses.
+  \item Pages are the VM blocks; page faults occur on misses.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item 32-bit virtual address may map to 30-bit physical address.
+  \item Each process gets a private virtual address space.
+  \item A page fault triggers disk access and OS handler.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Page faults are orders of magnitude slower than cache misses.
+
+\subsection{Page Tables and PTE Fields (L20)}
+\textbf{What it is.} Page tables map virtual page numbers to physical page numbers.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Split virtual address into page number and offset.
+  \item Use page number to index the page table.
+  \item PTE stores physical page number and status bits (valid, dirty, reference).
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item 4 KB pages mean 12-bit offset.
+  \item Valid bit 0 indicates page not in memory.
+  \item Dirty bit set when a page is modified.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Page tables live in physical memory, not in cache by default.
+
+\subsection{Page Faults and Handler Steps (L20)}
+\textbf{What it is.} A page fault occurs when the needed page is not in memory.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Trap to OS with faulting address.
+  \item Find page on disk; choose victim page.
+  \item Write back victim if dirty; load new page.
+  \item Update page table and restart instruction.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Page fault costs millions of cycles.
+  \item Dirty victim causes extra disk write.
+  \item Restart from the faulting instruction after load.
+\end{enumerate}
+
+\textbf{Common checks and traps.} Page faults are handled by OS, not hardware alone.
+
+\subsection{Page Replacement and Reference Bits (L20)}
+\textbf{What it is.} OS selects a page to evict using algorithms like LRU.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Use reference (use) bit to approximate LRU.
+  \item Periodically clear reference bits.
+  \item Prefer evicting pages with reference bit 0.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item Clock algorithm uses reference bits in a ring.
+  \item Dirty page eviction requires write-back.
+  \item Clean page eviction avoids disk write.
+\end{enumerate}
+
+\textbf{Common checks and traps.} True LRU is expensive to implement in OS.
+
+\subsection{TLB and TLB Miss Handling (L20)}
+\textbf{What it is.} TLB caches page table entries to speed address translation.
+
+\textbf{Step-by-step.}
+\begin{enumerate}[leftmargin=*]
+  \item Check TLB for virtual page number.
+  \item On hit, get physical page number and proceed.
+  \item On miss, fetch PTE from memory or trigger page fault.
+  \item Update TLB and retry.
+\end{enumerate}
+
+\textbf{Examples.}
+\begin{enumerate}[leftmargin=*]
+  \item TLB miss with page in memory: load PTE and retry.
+  \item TLB miss with page not in memory: page fault.
+  \item Software-managed TLB uses a special exception handler.
+\end{enumerate}
+
+\textbf{Common checks and traps.} TLB miss handling can be hardware or software.
+
+\appendix
+\section{MIPS Programming Guide (Lecture Notes-Compatible)}
+
+\subsection{Register File and Calling Convention}
+\textbf{Key registers.}
+\begin{itemize}[leftmargin=*]
+  \item $\$zero$ = 0; $\$at$ assembler temp; $\$v0$--$\$v1$ return values.
+  \item $\$a0$--$\$a3$ arguments; $\$t0$--$\$t9$ temporaries (caller-saved).
+  \item $\$s0$--$\$s7$ saved (callee-saved); $\$sp$ stack pointer; $\$fp$ frame pointer; $\$ra$ return address.
+\end{itemize}
+
+\textbf{Example: caller vs callee saved.}
+\begin{verbatim}
+# caller uses $t0, must save if needed
+add $t0, $a0, $a1
+sw  $t0, 0($sp)
+
+# callee saves $s0
+sw  $s0, 0($sp)
+...
+lw  $s0, 0($sp)
+jr  $ra
+\end{verbatim}
+
+\subsection{Data Types, Directives, and Alignment}
+\textbf{Common directives.} \texttt{.word}, \texttt{.half}, \texttt{.byte}, \texttt{.asciiz}, \texttt{.space}.
+
+\textbf{Examples.}
+\begin{verbatim}
+.data
+arr:   .word 1, 2, 3, 4
+msg:   .asciiz "hello"
+buf:   .space 64
+
+.text
+la  $t0, arr   # address of array
+lw  $t1, 0($t0)
+\end{verbatim}
+
+\textbf{Alignment tip.} Word data should be 4-byte aligned for lw/sw.
+
+\subsection{Instruction Formats and Addressing Modes}
+\textbf{Formats.} R-type (op, rs, rt, rd, shamt, funct), I-type (op, rs, rt, imm), J-type (op, target).
+
+\textbf{Addressing modes.}
+\begin{itemize}[leftmargin=*]
+  \item Register: \texttt{add \$t0, \$t1, \$t2}
+  \item Immediate: \texttt{addi \$t0, \$t1, 4}
+  \item Base+offset: \texttt{lw \$t0, 8(\$sp)}
+  \item PC-relative branch: \texttt{beq \$t0, \$t1, label}
+\end{itemize}
+
+\subsection{Arithmetic and Logical Operations}
+\textbf{Examples.}
+\begin{verbatim}
+add  $t0, $t1, $t2   # signed add
+addu $t0, $t1, $t2   # unsigned add (no overflow trap)
+sub  $t0, $t1, $t2
+and  $t0, $t1, $t2
+or   $t0, $t1, $t2
+xor  $t0, $t1, $t2
+slt  $t0, $t1, $t2   # $t0=1 if $t1<$t2 (signed)
+sltu $t0, $t1, $t2   # unsigned compare
+\end{verbatim}
+
+\textbf{Example: absolute value.}
+\begin{verbatim}
+abs:
+  slt  $t0, $a0, $zero
+  beq  $t0, $zero, done
+  sub  $a0, $zero, $a0
+done:
+  jr   $ra
+\end{verbatim}
+
+\subsection{Shifts and Bit Tricks}
+\textbf{Examples.}
+\begin{verbatim}
+sll $t0, $t1, 2     # multiply by 4
+srl $t0, $t1, 1     # logical shift right
+sra $t0, $t1, 1     # arithmetic shift right
+
+# extract low 8 bits
+andi $t0, $t1, 0xFF
+\end{verbatim}
+
+\subsection{Load/Store and Memory Access}
+\textbf{Examples.}
+\begin{verbatim}
+lw  $t0, 0($sp)     # load word
+sw  $t0, 4($sp)     # store word
+lb  $t1, 0($t0)     # load byte (sign-extend)
+sb  $t1, 1($t0)     # store byte
+lh  $t2, 0($t0)     # load half
+sh  $t2, 2($t0)     # store half
+\end{verbatim}
+
+\textbf{Alignment tip.} Use lw/sw on word-aligned addresses only.
+
+\subsection{Branches and Jumps}
+\textbf{Examples.}
+\begin{verbatim}
+beq $t0, $t1, equal
+bne $t0, $t1, noteq
+
+loop:
+  addi $t0, $t0, -1
+  bne  $t0, $zero, loop
+
+j   target
+jal func       # jump and link
+jr  $ra         # return
+\end{verbatim}
+
+\subsection{Functions and Stack Frames}
+\textbf{Pattern.}
+\begin{verbatim}
+func:
+  addi $sp, $sp, -16
+  sw   $ra, 12($sp)
+  sw   $s0, 8($sp)
+  move $s0, $a0
+  ...
+  lw   $s0, 8($sp)
+  lw   $ra, 12($sp)
+  addi $sp, $sp, 16
+  jr   $ra
+\end{verbatim}
+
+\textbf{Example: factorial (recursive).}
+\begin{verbatim}
+fact:
+  addi $sp, $sp, -8
+  sw   $ra, 4($sp)
+  sw   $a0, 0($sp)
+  ble  $a0, 1, base
+  addi $a0, $a0, -1
+  jal  fact
+  lw   $a0, 0($sp)
+  mul  $v0, $v0, $a0
+  j    done
+base:
+  li   $v0, 1
+done:
+  lw   $ra, 4($sp)
+  addi $sp, $sp, 8
+  jr   $ra
+\end{verbatim}
+
+\subsection{Syscalls (MARS/QtSPIM)}
+\textbf{Common services.}
+\begin{itemize}[leftmargin=*]
+  \item 1: print int (\texttt{\$a0})
+  \item 4: print string (\texttt{\$a0})
+  \item 5: read int (returns in \texttt{\$v0})
+  \item 10: exit
+  \item 2: print float (\texttt{\$f12}), 6: read float (returns in \texttt{\$f0})
+\end{itemize}
+
+\textbf{Example: print integer and newline.}
+\begin{verbatim}
+li   $v0, 1
+move $a0, $t0
+syscall
+
+li   $v0, 11
+li   $a0, 10
+syscall
+\end{verbatim}
+
+\subsection{Arrays and Loops}
+\textbf{Example: sum array of N words.}
+\begin{verbatim}
+sum:
+  move $t0, $a0    # base
+  move $t1, $a1    # N
+  li   $v0, 0
+loop:
+  beq  $t1, $zero, done
+  lw   $t2, 0($t0)
+  add  $v0, $v0, $t2
+  addi $t0, $t0, 4
+  addi $t1, $t1, -1
+  j    loop
+done:
+  jr   $ra
+\end{verbatim}
+
+\textbf{Example: max in array.}
+\begin{verbatim}
+max:
+  lw   $v0, 0($a0)
+  addi $a0, $a0, 4
+  addi $a1, $a1, -1
+loop:
+  beq  $a1, $zero, done
+  lw   $t0, 0($a0)
+  slt  $t1, $v0, $t0
+  beq  $t1, $zero, skip
+  move $v0, $t0
+skip:
+  addi $a0, $a0, 4
+  addi $a1, $a1, -1
+  j    loop
+done:
+  jr   $ra
+\end{verbatim}
+
+\subsection{Strings}
+\textbf{Example: strlen.}
+\begin{verbatim}
+strlen:
+  move $t0, $a0
+  li   $v0, 0
+loop:
+  lb   $t1, 0($t0)
+  beq  $t1, $zero, done
+  addi $v0, $v0, 1
+  addi $t0, $t0, 1
+  j    loop
+done:
+  jr   $ra
+\end{verbatim}
+
+\subsection{Multiply/Divide Instructions}
+\textbf{Examples.}
+\begin{verbatim}
+mult $t0, $t1
+mflo $t2         # low 32 bits of product
+mfhi $t3         # high 32 bits of product
+
+div  $t0, $t1
+mflo $t2         # quotient
+mfhi $t3         # remainder
+\end{verbatim}
+
+\subsection{Floating-Point Programming}
+\textbf{Example: dot product of 2 floats.}
+\begin{verbatim}
+dot:
+  li   $t0, 0
+  mov.s $f0, $f0   # sum in f0
+loop:
+  beq  $t0, $a2, done
+  lwc1 $f2, 0($a0)
+  lwc1 $f4, 0($a1)
+  mul.s $f6, $f2, $f4
+  add.s $f0, $f0, $f6
+  addi $a0, $a0, 4
+  addi $a1, $a1, 4
+  addi $t0, $t0, 1
+  j    loop
+done:
+  jr   $ra
+\end{verbatim}
+
+\textbf{Example: int to float conversion.}
+\begin{verbatim}
+mtc1 $t0, $f0
+cvt.s.w $f2, $f0
+\end{verbatim}
+
+\subsection{Common Debugging Checklist}
+\begin{itemize}[leftmargin=*]
+  \item Check register lifetimes: did you overwrite a needed $s$ register?
+  \item Check stack alignment and saved $ra$ for nested calls.
+  \item Verify load/store offsets and alignment.
+  \item Confirm branch logic and delay slots in your environment.
+  \item For FP, use correct .s/.d instruction variants.
+\end{itemize}
+
+\end{document}

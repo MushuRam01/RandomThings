@@ -1,0 +1,486 @@
+   CS–2710-1                              Spring 2026                       IEEE 754 Single-Precision Floating-Point
+                                                                                 Representation of floating point numbers in IEEE 754 standard:
+   Computer Organization and Systems (COS)                                                                    1         8              23
+                                                                                      single precision
+                                                                                                         sign S         E              M
+                                                                            FP-exponent E:
+                                                                            excess 127 binary coding                        mantissa:
+   AI/ML                                                                                                                    sign + magnitude, normalized
+                                                                            Actual exponent is e = E – 127
+   DS/NLP
+   Algo                   Lecture #10                                       Floating-point exponent E = e + 127
+                                                                                                                            binary significand w/ hidden
+                                                                                                                            integer bit: 1.M
+
+                       25 February 2026                                                      FP-exponent (E)                Actual exponent e
+                                                                                             00000000 (0)                   Special use
+                                                                                             00000001 (1)                   - 126
+                                                                                             00000010 (2)                   - 125
+   CO         CA                                                                             ………….                          …….
+                                                                                             01111111 (127)                 0
+                                                                                             ………….                          …….
+                    Ashoka University                        BBB                             11111110 (254)                 + 127
+                                                                                             11111111 (255)                 Special use
+
+
+
+
+How do I represent zero then ?  1. M × 2E -127
+0/1 0000 0000 0000 0000 0000 0000 0000 000                                      Single-Precision Normalized Range
+  FP-exponent (E)     Actual exponent e
+                                                                             Exponents 00000000 and 11111111 reserved
+  00000000 (0)        Special use            * Any non-zero number
+  00000001 (1)        - 126                  that is smaller than the        Smallest value
+  00000010 (2)        - 125
+  ………….               …….
+                                             smallest normalized FP-        0/1 0000 0001 0000 0000 0000 0000 0000 000
+                                             number is a denormal
+  01111111 (127)      0                                                           ±1.0 × 2–126 ≈ ±1.2 × 10–38
+  ………….               …….                    number (considering
+  11111110 (254)      + 127                  magnitude only)                      Largest value
+
+  11111111 (255)      Special use
+                                                                             0/1 1111 1110 1111 1111 1111 1111 1111 111
+                                                                                    = ±(2.0 – 2-23) × 2+127 ≈ ±3.4 × 10+38
+                                                                                                     -1.0 × 2–126       +1.0 × 2–126
+                                                                            ≈ -2.0 × 2+127                                                         ≈ +2.0 × 2+127
+                                                                                    representable         -ve           +ve       representable
+                                                                        -ve         normalized -ve        under-        under-    normalized +ve     +ve-
+                                                                        overflow FP-numbers               flow          flow      FP-numbers         overflow
+                                                                                                                    0
+                                                                                                                                   real line
+   Single-Precision FP-Denormal Numbers                                                               Denormal FP-Numbers
+    Exponents 00000000 and 11111111 reserved                                                             Exponent = 000...0  hidden bit is 0
+    Smallest value (normalized)
+                                                                                                                      N= (−1) × (0. Mantissa) × 2
+    0/1 0000 0001 0000 0000 0000 0000 0000 000
+            ±1.0 × 2–126 ≈ ±1.2 × 10–38                                                                  Smaller than normalized numbers
+            Denormal numbers (gradual underflow)
+                                                                                                                  allow for gradual underflow, with
+     0/1 0000 0000                                   M0                                                           diminishing precision
+           = ± 0.M × 2-126 {min: ± 2-23 × 2-126; max: ± (1-2-23 ) × 2-126}
+     ≈ -2.0 × 2+127       -1.0 × 2   –126
+                                                      +1.0 × 2–126                                        Denormal with mantissa = 000...0
+                                                                          ≈ +2.0 × 2+127
+             representable                                 representable
+             normalized -ve      under-
+                                 flow (-)
+                                                under-
+                                                flow (+)
+                                                           normalized +ve
+                                                                            Overflow (+)
+                                                                                                           +0, -0
+Overflow (-) FP-numbers                                    FP-numbers
+                                            0
+                                                            real line
+                                                                                                                                                   Chapter 3 — Arithmetic for Computers — 6
+
+
+
+
+       Infinities and NaNs                                                                                 Summary of IEEE 754 Encoding
+                                                                                                    Single-Precision          Exponent = 8    Fraction = 23            Value
+              Exponent = 111...1, Mantissa= 000...0                                                Normalized Number           1 to 254        Anything         ± (1.F)2 × 2E – 127
+                ± Infinity                                                                         Denormalized Number            0            nonzero           ± (0.F)2 × 2–126
+                                                                                                    Zero                           0               0                     ±0
+                Can be used in subsequent calculations,
+                                                                                                    Infinity                      255              0                     ±∞
+                 avoiding need for overflow check
+                                                                                                    NaN                           255           nonzero                 NaN
+              Exponent = 111...1, Mantissa ≠ 000...0                                               Double-Precision          Exponent = 11   Fraction = 52            Value
+                Not-a-Number (NaN)                                                                 Normalized Number           1 to 2046       Anything         ± (1.F)2 × 2E – 1023
+                                                                                                    Denormalized Number            0            nonzero           ± (0.F)2 × 2–1022
+                Indicates illegal or undefined result
+                                                                                                    Zero                           0               0                     ±0
+                       e.g., 0.0 / 0.0, -3                                                        Infinity                      2047             0                     ±∞
+                  Can be used in subsequent calculations                                           NaN                           2047          nonzero                 NaN
+
+                                                                                                     Overflow leads to ± ∞; underflow (gradual)  denormals;
+                                                         Chapter 3 — Arithmetic for Computers — 7
+                                                                                                     underflow (abrupt)  ± 0
+ Floating-Point Addition                                                        FP Adder Hardware
+    Consider a 3-digit mantissa binary example                                  Much more complex than integer adder
+       1.0002 × 2
+                   –1 + –1.111 × 2–2
+                              2
+                                                                                 Doing it in one clock cycle would take too
+    1. Align binary points
+          Shift right the number with smaller exponent                           long
+          1.0002 × 2–1 + –0.1112 × 2–1 ; rightmost 1 is lost                          Much longer than integer operations
+    2. Add significands (integer addition)                                            Slower clock would penalize all instructions
+          1.0002 × 2–1 + –0.1112 × 2–1 = 0.0012 × 2–1
+    3. Normalize result & check for over/underflow
+                                                                                   FP adder usually takes several cycles
+          1.0002 × 2–4, with no over/underflow                                          Can be pipelined
+    4. Round and renormalize if necessary
+          1.0002 × 2–4 (no change) = 0.0625
+
+                                                                                                                           Chapter 3 — Arithmetic for Computers — 10
+
+
+
+
+      Floating Point Addition Example                                                      Addition Example – cont’d
+ Consider adding: (+1.111)2 × 2–1 + (+1.011)2 × 2–3                            So, (1.111)2 × 2–1 + (1.011)2 × 2–3 = (10.00111)2 × 2–1
+      For simplicity, we assume 4 bits of precision (or 3 bits of fraction)    However, result (10.00111)2 × 2–1 is NOT normalized
+ Cannot add significands … Why?                                                Normalize result: (10.00111)2 × 2–1 = (1.000111)2 × 20
+      Because exponents are not equal
+                                                                                     In this example, we have a carry
+ How to make exponents equal?                                                       So, shift right by 1 bit and increment the exponent
+      Shift the significand of the lesser exponent right
+                                                                                Round the significand to fit in appropriate number of bits
+        until its exponent matches the larger number (WHY shift lesser?)
+                                                                                     We assumed 4 bits of precision or 3 bits of fraction
+ (1.011)2 × 2–3 = (0.1011)2 × 2–2 = (0.01011)2 × 2–1
+                                                                                Round to nearest: (1.000111)2 ≈ (1.001)2                      1.000 111
+      Difference between the two exponents = –1 – (–3) = 2
+                                                                                     Renormalize if rounding generates a carry            +       1
+      So, shift right by 2 bits                         1.111
+                                                      +
+                                                         0.01011                Detect overflow / underflow                                   1.001
+ Now, add the significands:                       Carry    10.00111                 If exponent becomes too large (overflow) or too small (underflow)
+(as unsigned numbers) Max sum: 11.11….110
+  Floating Point Subtraction Example                                                    Subtraction Example – cont’d
+ Consider: (1.000)2 × 2–3 + (- 1.000)2 × 22                                      So, (1.000)2 × 2–3 – (1.000)2 × 22 = – 0.111112 × 22
+    We assume again: 4 bits of precision (or 3 bits of fraction)                 Normalize result: – 0.111112 × 22 = – 1.11112 × 21
+ Shift significand of the lesser exponent right                                     For subtraction, we can have leading zeros
+    Difference between the two exponents = 2 – (–3) = 5                             Count number z of leading zeros (in this case z = 1)
+    Shift right by 5 bits: (1.000)2 × 2–3 = (0.00001000)2 × 22                      Shift left and decrement exponent by z
+ Convert subtraction into addition to 2's complement                             Round the significand to fit in appropriate number of bits
+           Sign                                                                      We assumed 4 bits of precision or 3 bits of fraction
+                       + 0.00001 × 22                                             Round to nearest: (1.1111)2 ≈ (10.000)2                       1.111 1
+      2’s Complement
+
+
+
+
+                                             Since result is negative, convert
+                       – 1.00000 × 22        result from 2's complement to                                                                   +       1
+                                             sign-magnitude                       Renormalize: rounding generated a carry
+                       0 0.00001 × 22                                                                                                            10.000
+                       1 1.00000 × 22                                               –1.11112 × 21 ≈ –10.0002 × 21 = –1.0002 × 22
+                                        2’s Complement
+                       1 1.00001 × 22                    – 0.11111 × 22              Result would have been accurate if more fraction bits are used
+
+
+
+
+                                                                                                                       Floating-Point Addition
+Floating-Point Addition: Salient Points
+                                                                                                               If one number is +ve and the other is
+  Can there be an overflow during the addition of significands?                                                –ve, addition of significands should
+  1.111 . . 11 (maximum value of significand with restored leading 1)                                          be done using 2’s complement and
+  1.111 . . 11    ,,                                                                                           the result is reconverted into sign-
+  + -------------                                                                                              magnitude form
+  11.111 .. 10
+  When two numbers are both +ve/-ve, we add their magnitudes only;
+  needs at most one extra bit to save the result; also, since there are                                                 A+B=
+  no sign bits, no question of overflow in this step
+                                                                                                             0 1000 0001 0000 0000 0000 0000 0000 000
+How do you determine the sign of the result?                                                                   A + B = 10.0 × 21; A + B = 1.0 × 22
+When signs are opposite, convert both numbers to 2’C, and then                                                A: + 0.1000 0000 0000 0000 0000 000 × 21
+perform addition; the sign-bit of the sum determines the sign of the
+result; next reconvert it back to sign-magnitude form; no question of                                         A: + 1.0000 0000 0000 0000 0000 000 ×
+                                                                                                                                                  20
+overflow in this step (WHY?)                                                                                B: + 1.1000 0000 0000 0000 0000 000 × 21
+                                                                                                         A 0 0111 1111 0000 0000 0000 0000 0000 000
+Then, when overflow/underflow can occur during FP-addition?
+                                                                                                         B   0 1000 000 1000 0000 0000 0000 0000 000
+ FP Adder Hardware                                                          Floating Point Multiplication Example
+                                                           Step 1            Consider multiplying: 1.0102 × 2–1 by –1.1102 × 2–2
+                                                           compare              As before, we assume 4 bits of precision (or 3 bits of fraction)
+                                                           exponents         Unlike addition, we add the exponents of the operands
+                                                           Step 2               Result exponent value = (–1) + (–2) = –3
+                                                       equalizing            Using the biased representation: EZ = EX + EY – Bias
+                                                       exponents                EX = (–1) + 127 = 126 (Bias = 127 for SP)
+                                                                                                                                           1.010
+                                                                                EY = (–2) + 127 = 125                                 ×
+                                                           Integer Step 3                                                                  1.110
+                                                           addition             EZ = 126 + 125 – 127 = 124 (value = –3)                 0000
+                                                                                                                                        1010
+                                          normalize        Step 4            Now, multiply the significands:                          1010
+                                                                              (1.010)2 × (1.110)2 = (10.001100)2                      1010
+                                          round            Step 5
+                                                                                                                                     10.001100
+                                          Result                              3-bit fraction   3-bit fraction   6-bit fraction
+
+
+
+
+     Multiplication Example – cont’d                                         Floating Point Multiplication
+ Since sign SX ≠ SY, sign of product SZ = 1 (negative)
+ So, 1.0102 × 2–1 × –1.1102 × 2–2 = –10. 0011002 × 2–3
+ However, result: –10. 0011002 × 2–3 is NOT normalized
+ Normalize: 10. 0011002 × 2–3 = 1.00011002 × 2–2
+    Shift right by 1 bit and increment the exponent
+    At most 1 bit can be shifted right … Why?
+ Round the significand to nearest:
+                                                           1.000 1100
+  1.00011002 ≈ 1.0012 (3-bit fraction)                 +       1
+  Result ≈ –1. 0012 × 2–2 (normalized)                     1.001
+
+ Detect overflow / underflow
+    No overflow / underflow because exponent is within range
+FP Multiplier – Hardware Realization                                       FP Arithmetic Hardware
+                                                                              FP multiplier is of similar complexity to FP
+                                                                               adder
+                                integer
+                                                                                    But uses a multiplier for significands instead of
+                                multiplier
+                                                                                     an adder
+                                                                              FP arithmetic hardware usually does
+                                                                                 Addition, subtraction, multiplication, division,
+                                                                                  reciprocal, square-root
+                                                                                 FP  integer conversion
+
+                                                                              Operations usually takes several cycles
+                                                 WHY Shift-Right only??
+                                                                                    Can be pipelined
+
+
+
+
+     Extra Bits to Maintain Precision                                      Three Extra Bits for Internal Use
+  Floating-point numbers are approximations for …                         Three extra bits are added called Guard, Round, Sticky
+     Real numbers                                                              To achieve accurate arithmetic such as rounding of significand,
+                                                                                 otherwise some bits would have been lost during right shifts
+  Infinite variety of real numbers exist between 1.0 and 2.0
+                                                                                Reduces hardware without compromising precision
+     However, exactly 223 fractions can be represented in SP, and
+     Exactly 252 fractions can be represented in DP (double precision)
+  Extra bits are generated in intermediate results when …                                     FP fields (32 or 64 bits)
+                                                                                                                                      1 1     1
+     Shifting and adding/subtracting a p-bit significand                                                    M
+                                                                          S      E                                                    G R     S
+     Multiplying two p-bit significands (product can be 2p bits)
+  But when packing result fraction, extra bits are discarded
+  We only need few extra bits in an intermediate result                                                             Guard, Round, Sticky
+     Minimizing hardware but without compromising precision
+                                                                                                                            Logical OR of all
+                                                                                                                            shifted-out bits after R
+                                              Guard Bit                                                                MIPS Floating Point Coprocessor
+                                                                                                                   Called Coprocessor 1 or the Floating-Point Unit (FPU)
+                                                                                                                   32 separate floating-point registers: $f0, $f1, …, $f31
+  When we shift bits to the right for alignment, some bits
+                                                                                                                   FP registers are 32 bits for single precision numbers
+   are lost
+                                                                                                                   Even-odd register pair form a double precision register
+  We may need to shift the result to the left for
+   normalization after operation                                                                                   Use the even number for double precision registers
+                                                                                                                        $f0, $f2, $f4, …, $f30 are used for double precision
+  Storing the lost bits shifted to the right will make results
+   more accurate during normalization                                                                              Separate FP instructions for single/double precision
+  Round and Sticky bits provide further handles for                                                                    Single precision: add.s, sub.s, mul.s, div.s       (.s extension)
+   accurate rounding                                                                                                    Double precision: add.d, sub.d, mul.d, div.d       (.d extension)
+                                                                                                                   FP instructions are more complex than the integer ones
+                                                                                                                        Take more cycles to execute
+
+
+
+
+         The MIPS Processor: Full View                                                                             FP Instructions in MIPS
+                                          ...
+                                                                      Big-Endian
+                                                                                                                      FP hardware is Co-processor 1
+                      4 bytes per word               Memory                                                                 Adjunct processor that extends the ISA
+                                          Up to 232 bytes = 230 words                                                 Separate FP registers
+                                                                        ...
+                                                                                                                            32 single-precision: $f0, $f1, … $f31
+                  EIU             $0   Execution &         FPU            F0     FP-Unit                                    Paired for double-precision: $f0/$f1, $f2/$f3, …
+32 General                        $1   Integer Unit                       F1   (Co-Proc. 1)                                      Release 2 of MIPs ISA supports 32 × 64-bit FP reg’s
+ Purpose                          $2   (Main proc)                        F2
+ Registers
+                                                                                              32 Floating-Point
+                                                                                                 Registers            FP instructions operate only on FP registers
+Arithmetic &
+                              $31
+                                         Integer              FP
+                                                                         F31                                              Programs generally don’t do integer ops on FP data,
+ Logic Unit
+                    ALU
+                                         mul/div              Arith                                                        or vice versa
+                                                                                              Floating-Point
+                                                                                              Arithmetic Unit             More registers with minimal code-size impact
+                                         Hi     Lo
+                                                           TMU        BadVaddr  Trap &
+                                                                       Status Memory Unit
+                                                                                                                      FP load and store instructions
+                  Integer
+                                                                       Cause (Co-Proc. 0)                                   lwc1, swc1,
+                                                                        EPC
+             Multiplier/Divider                                                                                                  e.g., lwc1 $f8, 32($sp)
+
+
+                                                                                                                                                                Chapter 3 — Arithmetic for Computers — 28
+  FP Instructions in MIPS                                                                                 FP Arithmetic Instructions
+     Single-precision arithmetic                                                            Instruction                  Meaning                           Format
+         add.s, sub.s, mul.s, div.s                                                         add.s    fd, fs, ft      (fd) = (fs) + (ft)   0x11        0       ft5     fs5       fd5       0
+              e.g., add.s $f0, $f1, $f6                                                     add.d    fd, fs, ft      (fd) = (fs) + (ft)   0x11        1       ft5     fs5       fd5       0
+                                                                                             sub.s    fd, fs, ft      (fd) = (fs) – (ft)   0x11        0       ft5     fs5       fd5       1
+     Double-precision arithmetic                                                            sub.d    fd, fs, ft      (fd) = (fs) – (ft)   0x11        1       ft5     fs5       fd5       1
+         add.d, sub.d, mul.d, div.d                                                         mul.s    fd, fs, ft      (fd) = (fs) × (ft)   0x11        0       ft5     fs5       fd5       2
+              e.g., mul.d $f4, $f4, $f6                                                     mul.d    fd, fs, ft      (fd) = (fs) × (ft)   0x11        1       ft5     fs5       fd5       2
+                                                                                             div.s    fd, fs, ft      (fd) = (fs) / (ft)   0x11        0       ft5     fs5       fd5       3
+     Single- and double-precision comparison                                                div.d    fd, fs, ft      (fd) = (fs) / (ft)   0x11        1       ft5     fs5       fd5       3
+                                                                                             sqrt.s   fd, fs          (fd) = sqrt (fs)     0x11        0        0      fs5       fd5       4
+                                                                                             sqrt.d   fd, fs          (fd) = sqrt (fs)     0x11        1        0      fs5       fd5       4
+     Branch on FP condition code true or false
+                                                                                             abs.s    fd, fs          (fd) = abs (fs)      0x11        0        0      fs5       fd5       5
+                                                                                             abs.d    fd, fs          (fd) = abs (fs)      0x11        1        0      fs5       fd5       5
+                                                                                             neg.s    fd, fs          (fd) = – (fs)        0x11        0        0      fs5       fd5       7
+                                                                                             neg.d    fd, fs          (fd) = – (fs)        0x11        1        0      fs5       fd5       7
+
+
+                                                 Chapter 3 — Arithmetic for Computers — 29
+
+
+
+
+           FP Load/Store Instructions                                                                 FP Data Movement Instructions
+ Separate floating point load/store instructions                                             Moving data between general purpose and FP registers
+    lwc1: load word coprocessor 1                                                               mfc1: move from coprocessor 1                   (to general purpose register)
+                                                         General purpose
+    ldc1: load double coprocessor 1
+                                                        register is used as                      mtc1: move to coprocessor 1                     (from general purpose register)
+    swc1: store word coprocessor 1                      the base register
+    sdc1: store double coprocessor 1                                                         Moving data between FP registers
+  Instruction                 Meaning                         Format                             mov.s: move single precision float
+  lwc1    $f2, 40($t0)   ($f2) = Mem[($t0)+40]   0x31   $t0    $f2      im16 = 40
+                                                                                                 mov.d: move double precision float = even/odd pair of registers
+  ldc1    $f2, 40($t0)   ($f2) = Mem[($t0)+40]   0x35   $t0    $f2      im16 = 40
+  swc1    $f2, 40($t0)   Mem[($t0)+40] = ($f2)   0x39   $t0    $f2      im16 = 40
+                                                                                                Instruction                Meaning                         Format
+  sdc1    $f2, 40($t0)   Mem[($t0)+40] = ($f2)   0x3d   $t0    $f2      im16 = 40
+                                                                                                mfc1       $t0, $f2       ($t0) = ($f2)    0x11    0       $t0       $f2     0         0
+ Better names can be used for the above instructions                                           mtc1       $t0, $f2       ($f2) = ($t0)    0x11    4       $t0       $f2     0         0
+    l.s = lwc1 (load FP single),            l.d = ldc1 (load FP double)                        mov.s $f4, $f2            ($f4) = ($f2)    0x11    0       0         $f2     $f4       6
+    s.s = swc1 (store FP single),           s.d = sdc1 (store FP double)                       mov.d $f4, $f2            ($f4) = ($f2)    0x11    1       0         $f2     $f4       6
+                  FP Convert Instructions                                             FP Compare and Branch Instructions
+ Convert instruction: cvt.x.y                                                        FP unit (co-processor 1) has a condition flag
+     Convert to destination format x from source format y                                  Set to 0 (false) or 1 (true) by any comparison instruction
+
+ Supported formats                                                                   Three comparisons: equal, less than, less than or equal
+     Single precision float = .s          (single precision float in FP register)    Two branch instructions based on the condition flag
+     Double precision float = .d (double float in even-odd FP register)
+                                                                                     Instruction              Meaning                            Format
+     Signed integer word           = .w (signed integer in FP register)             c.eq.s   fs, ft    cflag = ((fs) == (ft))   0x11      0      ft5    fs5     0   0x32
+ Instruction              Meaning                          Format                    c.eq.d   fs, ft    cflag = ((fs) == (ft))   0x11      1      ft5    fs5     0   0x32
+ cvt.s.w fd, fs   to single from integer    0x11     0    0     fs5   fd5   0x20     c.lt.s   fs, ft    cflag = ((fs) <= (ft))   0x11      0      ft5    fs5     0   0x3c
+ cvt.s.d fd, fs   to single from double     0x11     1    0     fs5   fd5   0x20     c.lt.d   fs, ft    cflag = ((fs) <= (ft))   0x11      1      ft5    fs5     0   0x3c
+ cvt.d.w fd, fs   to double from integer    0x11     0    0     fs5   fd5   0x21     c.le.s   fs, ft    cflag = ((fs) <= (ft))   0x11      0      ft5    fs5     0   0x3e
+ cvt.d.s fd, fs   to double from single     0x11     1    0     fs5   fd5   0x21     c.le.d   fs, ft    cflag = ((fs) <= (ft))   0x11      1      ft5    fs5     0   0x3e
+ cvt.w.s fd, fs   to integer from single    0x11     0    0     fs5   fd5   0x24     bc1f     Label     branch if (cflag == 0)   0x11      8       0            im16
+ cvt.w.d fd, fs   to integer from double    0x11     1    0     fs5   fd5   0x24     bc1t     Label     branch if (cflag == 1)   0x11      8       1            im16
+
+
+
+
+                          Syscall Services                                             FP Example: °F to °C
+Service             $v0 Arguments / Result                                                 C code:
+Print Integer        1     $a0 = integer value to print                                     float f2c (float fahr) {
+Print Float          2     $f12 = float value to print                                         return ((5.0/9.0)*(fahr - 32.0));
+Print Double         3     $f12 = double value to print                                     }
+                                                                                              fahr in $f12, result in $f0, literals in global memory
+Print String         4     $a0 = address of null-terminated string
+                                                                                               space
+Read Integer         5     $v0 = integer read
+Read Float           6     $f0 = float read                                                Compiled MIPS code:
+Read Double          7     $f0 = double read                                                f2c: lwc1 $f16, const5($gp)
+                                                                                                 lwc2 $f18, const9($gp)
+Read String          8     $a0 = address of input buffer
+                                                                                                 div.s $f16, $f16, $f18
+                           $a1 = maximum number of characters to read
+                                                                                                 lwc1 $f18, const32($gp)
+Exit Program         10                                                                          sub.s $f18, $f12, $f18
+Print Char           11    $a0 = character to print                                              mul.s $f0, $f16, $f18
+                                                          Supported by MARS
+Read Char            12    $a0 = character read                                                  jr    $ra
+                                                                                                                                        Chapter 3 — Arithmetic for Computers — 36
+                                                                                     Integer Multiplication: A Fundamental Question
+                                                                                        What is the complexity of multiplying two n-bit integers?
+
+
+
+
+                   Integer Multiplication
+
+                                                                                                                                           Ai and Bi are all 0 or 1
+
+
+
+
+                   Integer Multiplication                                           Integer Multiplication                                       School method
+                                                                                                                                                 (n2) bit operations
+Multiplication                                                                      Multiplication
+Given two n-bit unsigned integers a and b, compute a  b                            Given two n-bit unsigned integers a and b, compute a  b
+
+                                     1 1 0 1 0 1 0 1                                                 1 1 0 1 0 1 0 1
+                                    0 1 1 1 1 1 0 1
+School method                                                                                       0 1 1 1 1 1 0 1
+                                     1 1 0 1 0 1 0 1
+(n2) bit operations                                                                                 1 1 0 1 0 1 0 1
+                                  0 0 0 0 0 0 0 0                                                 0 0 0 0 0 0 0 0
+                                 1 1 0 1 0 1 0 1                                                1 1 0 1 0 1 0 1
+                              1 1 0 1 0 1 0 1          Ref: Jon Kleinberg and Éva                                      Andrey Nikolaevich Kolmogorov (1903 – 1987)
+                                                                                              1 1 0 1 0 1 0 1
+                                                       Tardos, Algorithm Design
+                            1 1 0 1 0 1 0 1                                                 1 1 0 1 0 1 0 1            1952: Kolmogorov conjectured that any
+                           1 1 0 1 0 1 0 1             Copyright © 2005 Pearson-          1 1 0 1 0 1 0 1              multiplication algorithm will take (n2) bit
+                        1 1 0 1 0 1 0 1                Addison Wesley                   1 1 0 1 0 1 0 1
+                                                                                                                       operations, i.e., it is asymptotically optimal
+                       0 0 0 0 0 0 0 0                                                0 0 0 0 0 0 0 0                  1960: Kolmogorov announced in a seminar at
+                   0 1 1 0 1 0 0 0 0 0 0 0 0 0 0 1                                   0 1 1 0 1 0 0 0 0 0 0 0 0 0 0 1   Moscow State University that it is indeed (n2)
+
+    Q. Is school multiplication algorithm optimal?                                        Q. Is grade-school multiplication algorithm optimal?
+                                                                                           Karatsuba multiplication algorithm for two n-bit
+Integer Multiplication                                       School method                 unsigned integers a, b
+                                                             (n2) bit operations                                                                                                  n/2                n/2
+                                                                                            a   2 n / 2  a1  a0
+Multiplication                                                                                                                                                            a
+                                                                                            b   2 n / 2  b1  b0                                                                    a1                  a0
+Given two n-bit integers a and b, compute a  b                                             ab  2 n  a1b1  2 n / 2  a1b0  a0b1   a0b0
+                                                                                                2 n  a1b1  2 n / 2   (a1  a0 )(b1  b0 )  a1b1  a0b0   a0b0      b
+                                                                                                          1                                             3         3                   b1                  b0
+                 1 1 0 1 0 1 0 1                1960: Kolmogorov announced in a                                                    2              1
+
+
+                                                seminar at Moscow State University
+                0 1 1 1 1 1 0 1
+                                                that multiplication is indeed (n2)        To multiply two n-bit integers a and b:         a 1b 0 + a 0b 1
+                 1 1 0 1 0 1 0 1
+                                                                                            Add two ½n bit integers;                     =
+              0 0 0 0 0 0 0 0      Kolmogorov                                               Multiply three ½n-bit integers, recursively; (a1+ a0) (b1+ b0) ̶ a1b1 ̶ a0b0
+            1 1 0 1 0 1 0 1                                                                 Add, subtract, and shift to obtain result;
+          1 1 0 1 0 1 0 1                                                                   Four multiplications in each step of recurrence are reduced to three.
+        1 1 0 1 0 1 0 1            Anatoly Alexeyevich                                         Theorem: [Karatsuba-Ofman 1962] One can multiply two n-bit
+      1 1 0 1 0 1 0 1              Karatsuba (1937 – 2008)
+                                                                                               integers in O(n1.585) bit operations 
+    1 1 0 1 0 1 0 1
+                                   1960: Within one week,
+  0 0 0 0 0 0 0 0                  Karatsuba disproved the claim,                                T(n)  T n/2   T n/2   T 1n/2   (n)  T(n)  O(nlg3 )  O(n1.585 )
+                                                                                                                  
+ 0 1 1 0 1 0 0 0 0 0 0 0 0 0 0 1   showing that multiplication can                                                   recursive calls          add, subtract,shift
+
+                                   be done in O(n1.585) time!
+                                                                                                                                                              Ref: Jon Kleinberg and Éva Tardos, Algorithm Design
+                                                                                                                                                              Slides by Kevin Wayn
+                                                                                                                                                              Copyright © 2005 Pearson-Addison Wesley             42
+
+
+
+
+        Multiplication of two n-bit integers a, b                                           Important Announcement
+
+                                                                                                  • Class-Test #1: Friday, 27 February 2026; in class;
+   Theorem: [Schönhage and Strassen] It is possible to multiply                                   • Open-book, open-notes; No electronics;
+   two n-bit integers in O(nlogn log logn) bit operations                                         • Only handwritten sheets, printed material, and
+                                                                                                    books allowed;
+                                                                                                  • Credit = 20%;
+                                                                                                  • Time: 10:10 AM – 11:40 AM;
+                                                                                                  • Coverage: Lecture #01 - Lecture #09;
+
+
+                      Ref: D. E. Knuth, The Art of Computer Programming,
+                      Vol. 2: Seminumerical Algorithms, Addison Wesley
+                                                                                      43
+

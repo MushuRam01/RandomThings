@@ -1,0 +1,551 @@
+       CS–2710-1                          Spring 2026                      Control Hazards
+      Computer Organization and Systems (COS)
+                                                                                A control hazard arises when the computation of the
+      AI/ML                                                                     destination of a branch and update of PC are awaited,
+                                                                                and hence, the instruction to be executed next, is
+      DS/LLM                        Lecture #18                                 uncertain at this moment
+                                                                                                                          Let $t1 = $t2
+                                    10 April 2026
+                                                                                      beq $t1, $t2, Target       IF ID/RR          EX    MEM WB
+                                                                                      lw $t3, 0($t4)                     IF        ID/RR EX MEM WB
+      CO        CA                                                                    …
+                                                                                      …                                 What will happen to the
+                         Ashoka University                   BBB                Target: add $t1, $t2, $t3               lw instruction?
+                                                                                                                                                    2
+
+
+
+
+                                                                                Example: Control Hazards due to Branch
+    Datapath
+     Instruction
+        Fetch      With Fetch Control
+                 Instr. Decode
+                  Reg.
+                                Execute
+                               Addr. Calc
+                                          Memory Write
+                                          Access Back
+                                                                                 Dependencies backward in time cause hazards
+
+
+                                                    beq $t1, $t2, Target
+                                                                                 beq           IF                 Mem         WB
+
+
+
+
+                                                                                                            EX
+                                                                                                    ID/R
+                                                                           I
+                                                                           n
+                                                                           s
+                                                                                 lw                 IF                    Mem       WB
+
+
+
+
+                                                                                                                   EX
+                                                                                                           ID/R
+                                                                           t
+                                                                           r.
+                         IF  ID/RR  EX  Mem  WB
+                                                                                 Inst 3                    IF                      Mem   WB
+
+
+
+
+                                                                                                                              EX
+                                                                           O                                      ID/R
+                                                                           r
+                                                                           d
+                                                                           e     Inst 4                           IF                     Mem   WB
+
+
+
+
+                                                                                                                                   EX
+                                                                                                                          ID/R
+                                                                           r
+
+PC-Update for beq is
+done in Mem-stage
+
+                 pipeline latches
+Branch            beq    IF   ID   EX    MEM   WB              lw                          One Way to “Fix” a Control Hazard: Insert stalls
+Penalty                       *    *       *    IF       ID     EX    MEM     WB
+                                                                                                                                 PC-update
+                                       branch penalty: 3 clock cycles
+                                                                                                                                                            Fix branch
+                                                                                           beq           IF                       Mem    WB
+
+
+
+
+                                                                                                                         EX
+                                                                                     I                           ID/R                                        hazard by
+                                                                                     n                                                                       waiting for
+                                                                                     s                                                                3 stalls – affects
+                                                                                     t     stall                                                                    CPI
+                                                                                     r.
+
+                                                                                     O     stall
+                                                                                     r
+                                                                                     d
+                                                                                     e     stall
+                                                                                     r
+                                                                                                                                         IF                 Mem      WB
+
+
+
+
+                                                                                                                                                      EX
+                                                                                                                                              ID/R
+                                                                                           lw
+                                                                                                     beq $t1, $t2, Target
+  What is the branch                                                                                                              or
+    penalty for this                                                                                           lw $t3, 0($t4)
+     architecture?                                                                         Inst 3              …
+  PC is updated in the                                                                                         …
+     MEM-stage!                                                                                      Target: add $t1, $t2, $t3
+
+
+
+
+   Control Hazards                                                                        Datapath
+                                                                                           Instruction
+                                                                                              Fetch    With
+                                                                                                        Reg. Fetch Control
+                                                                                                       Instr. Decode  Execute   Memory
+                                                                                                                     Addr. Calc Access
+                                                                                                                                                               Write
+                                                                                                                                                               Back
+                                                                                                          Use a separate ALU
+      Hardware solution?                                                                                 for comparing two
+                                                                                                          registers (zero-
+                                                                                                          checker), and move
+                                                                                                          target address-
+   Can we compute branch target and                                                                       computation and
+                                                                                                          PC-update MUX,
+   PC-Update, earlier in the pipeline?                                                                    HERE: ID/RR
+
+                                                                                                              IF  ID/RR  EX  Mem  WB
+
+   Would reduce stalls for successor
+   instructions!
+                                                                                      Outcome of branch is
+                                                                                     known at the end of EX;
+                                                                                     PC-update is being done
+                                                                                         in Mem-stage
+                                                     Chapter 4 — The Processor — 7                                                            Chapter 4 — The Processor — 8
+Control Hazards (beq) – So far                                                     Control Hazards (beq)
+ In MIPS pipeline, we can reduce branch penalty                                      In MIPS pipeline, we can reduce branch
+                                                                 Insert an
+      by comparing registers (zero-checking) and computing target
+                                                                 additional            penalty
+       (PC-update) early in the pipeline
+      Add hardware to do it in ID-stage
+                                                                 ALU for                by comparing registers (zero-checking) and
+                                                                 zero-checking
+     In other words,
+                                                                                         computing target (PC-update) early in the
+      Find out earlier whether the branch is taken or not-taken (add
+                                                                                         pipeline
+       zero-checker to ID-stage)                                                        Add hardware to do it earlier in ID/RR-stage
+      Compute target-address of taken-branch earlier (allocate
+       hardware resources at the ID-stage)
+
+
+
+
+       IF                                    ID/RR
+                                                                                                                          Chapter 4 — The Processor — 10
+
+
+
+
+ Stall on Branch                                                                  Another Approach: Branch Prediction
+    Wait until branch outcome determined (at                                         Longer pipelines cannot readily determine
+     ID/RR-stage) before fetching next                                                 branch outcome early
+     instruction                                                                          Fixed stall-penalty becomes unacceptable
+                                                                                      Predict outcome of branch
+                                                                                          Stall only if prediction is wrong
+                                                                                      In MIPS pipeline, use
+                                                                                        Predict-not-taken (normal flow: PC + 4)
+                                                                                        Fetch instruction after branch, with no delay
+
+ Instead of “three stalls”, we now have only “one stall”
+
+
+                                                 Chapter 4 — The Processor — 11                                           Chapter 4 — The Processor — 12
+    MIPS with Predict-Not-Taken                                                        Control Hazards
+                                                                                                                               Branch Hazard Solutions
+                                                                                       #1: Stall until branch target is known (3 stalls per branch)
+
+Prediction                                                            No stall
+correct (branch-
+                                                                                       #2: Move zero-checking (ZC) and target-address
+not-taken)                                                                               computation (TC) earlier (in ID/RR-Stage): Additional HW
+                                                                                          (one stall per branch; may conflict with preceding instr)
+                                  1 clock cycle in
+                                  pipelined machine
+                                  = 200 ps
+                                                                      one-cycle        #3: Predict Branch-Not-Taken
+Prediction                                                            stall, with          Execute successor instructions in sequence
+incorrect                                                             modified
+(branch taken)                                                                              (no stall if branch is not taken)
+                                                                      hardware             “Squash” instructions in pipeline if branch actually
+                                                                                            taken (one stall), with early ZCTC
+                                                                                           47% MIPS branches not taken on average
+
+                                                                                           PC+4 already calculated, so use it to get next
+                                                      Chapter 4 — The Processor — 13
+                                                                                            instruction                                         14
+
+
+
+
+    More Realistic Branch Prediction                                                   Dynamic Branch Prediction
+       Static branch prediction                                                        In deeper and advanced pipelines, branch
+           Based on typical branch behavior                                             penalty is more significant
+           Example: loop and if-statement branches                                     Use dynamic prediction
+                Predict backward branches taken                                            Branch prediction buffer (aka branch history table)
+                Predict forward branches not-taken
+                                                                                            Indexed by recent branch instruction addresses
+       Dynamic branch prediction                                                           Stores outcome (taken/not taken)
+           Hardware measures actual branch behavior                                        To execute a branch
+                e.g., record recent history of each branch
+                                                                                                Check table, expect the same outcome
+           Assume future behavior will continue the trend                                      Start fetching from fall-through or target
+                When wrong, stall while re-fetching, and update history                        If wrong, flush pipeline and flip prediction
+
+
+
+
+                                                      Chapter 4 — The Processor — 15                                                    Chapter 4 — The Processor — 16
+  1-Bit Predictor                                                                           2-Bit Predictor: Increases Prediction Accuracy
+
+     Inner loop branches mispredicted twice!                                                    Only change prediction on two successive
+                outer: …
+                                                                                                  mispredictions
+                       …
+                inner: …
+                       …
+                       beq …, …, inner
+                       …
+                       beq …, …, outer
+
+        Mispredict as taken on last iteration of
+         inner loop
+        Then mispredict as not taken on first
+
+         iteration of inner loop next time around
+                                                          Chapter 4 — The Processor — 17                                            Chapter 4 — The Processor — 18
+
+
+
+
+  Another solution to improve branch hazard
+  performance: Delay-Slot (Compiler assisted)                                                 Stalls and Performance
+                                                                              Slot filled     The BIG Picture
+  Slot filled                                                                 from the
+                                                                              path of
+  from the
+  path of                                                                     taken              Stalls reduce performance
+  not-taken                                                                   branch
+  branch
+                                                                                                     But are required to get correct results
+                                                                                                 Compiler can arrange code to avoid
+                                                                                                  hazards and stalls
+                                                                                                     Requires knowledge of the pipeline structure
+
+
+
+
+Idea: Reorder code maintaining semantics, to buy time for branch to know the outcome
+                                                                                                                                    Chapter 4 — The Processor — 20
+Performance Equation                            Pipeline overhead may
+                                                degrade ideal speed-up
+                                                                                      Hazards: Summary
+ Pipeline Speed-Up in an ideal machine                                              To avoid structural hazard:
+                                                                                     1. Use bubbles (stalls)
+ = CPI_unpipelined / CPI_Pipelined
+                                                                                     2. Use separate instruction/data memories
+  Pipeline_Depth / CPI_Pipelined      Ideal CPI_Pipelined = 1
+                                                                                        or, separate instruction/data caches
+  Pipeline_Depth
+
+
+
+ Pipeline Speed-Up in the presence of stalls                                     To avoid data hazard:
+                                                                                  1. Use bubbles (stalls)
+ = CPI_unpipelined / CPI_Pipelined
+                                                                                  2. Use half-cycle Register Write (first)/Register Read (second)
+  Pipeline_Depth / (1 + Avg. #Pipeline_Stall_Cycles_per_Instruction)            3. Use data forwarding by hardware (EX/Mem  ALU_in;
+ Example (Impact of branch penalty):                                                Mem/WB  ALU_in
+ Pipeline Speed-Up                                                               4. Use code-reordering by compiler
+ = Pipeline_Depth /{1 + (Branch_Freq.  Branch_Penalty)}
+
+
+                                                                                                                           Chapter 4 — The Processor — 22
+
+
+
+
+                                                                                                                                                            24
+
+    Pipeline Summary
+                                                                                                 Operating System (OS)
+       Pipelining improves performance by
+        increasing instruction throughput                                                          Process Management
+         Executes multiple instructions in parallel                                           Synchronization and Deadlocks
+         Each instruction has the same latency
+                                                                                                   Memory Management
+       Subject to hazards
+           Structure, data, control                                                             File System Management
+       Instruction set design affects complexity of                                                  I/O Management
+        pipeline implementation                                                                 Operating System Structures
+                                                                                                  Security and Protection
+                                               Chapter 4 — The Processor — 23
+                                                                                ACMU 2008-09
+    Memory Hierarchy (MH)
+                                                                                                                                    Memory Hierarchy
+                                                       Memory transaction is inherently
+                                                       slow compared to logic
+
+  Use of memory hierarchy
+  reduces the transaction time                   Cache Memory          speed,                                                                     CPU
+  across CPU-memory interface
+                                                 (SRAM)                cost         +
+                                                                                                                                                 SRAM                 ~ 32KB - 64KB /core
+                                                                                                                                                  (L1)                 on-chip L1-cache
+                                                                                                                                 small,
+                      Datapath                    Main Memory             storage                                                fast          SRAM (L2)                    ~ 256 KB – 1 MB /core
+        Control
+                                                  (DRAM)                 capacity                                                                                            off-chip L2-cache
+                       ALU
+                                                                                                                                                    L3                                L3- cache
+                                                                                    +                                                                                         ~ 1 MB – 8 MB /core
+     Registers    On-chip cache                 Secondary Memory (Flash,                                                  large, slower,        DRAM                         ~ 4 GB – 64 GB /core
+                                                Hard disk, SSD, CD)                                                       cheaper               (DDR)                       Main Memory (MM)
+    Processor (CPU)
+
+Which portions of program or
+data should be kept at the
+                                                 Tertiary Memory (Tape,                                                                    Hard Disc/SSD                                  ~ 512 GB
+                                                 RAID, Networks, Cloud)                                     huge,
+upper layers of MH?                                                                                         slower
+                                                                                                            cheaper
+
+Recall: What determines the
+                                                             Memory                                                          RAID/Network Storage/Cloud
+CCT of a processor?
+
+
+
+
+                                                                                        §5.1 Introduction
+    Principle of Locality                                                                                      Taking Advantage of Locality
+     Programs access a small proportion of                                                                     Memory hierarchy
+      their address space at any time                                                                           Store everything on disk
+
+     Temporal locality                                                                                         Copy recently accessed (and nearby)
+         Items accessed recently are likely to be                                                               items from disk to smaller DRAM memory
+          accessed again soon                                                                                            Main memory
+         e.g., instructions in a loop, induction variables
+                                                                                                                  Copy more recently accessed (and
+       Spatial locality                                                                                           nearby) items from DRAM to smaller
+         Items near those accessed recently are likely                                                            SRAM memory (Cache)
+          to be accessed soon
+                                                                                                                         Cache memory attached to CPU (on-chip
+         E.g., sequential instruction access, array data
+                                                                                                                          cache)
+                             Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 27                                                   Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 28
+            Motivating Idea behind
+                                                                            The principle of locality
+             Memory Hierarchy
+                                                              Two types of locality (empirical rules):
+   Keep most important items (Instructions/Data)
+   close to you (CPU)                                            – Temporal locality - near in time: we often access the same
+                                                                   item again and again (e.g., instructions in a loop)
+   “close” means at higher levels of memory hierarchy,
+     e.g., at cache (relative to MM); or at MM (relative         – Spatial locality - near in space/distance: our next access is
+     to Disc storage), etc. ..                                     often very close to recent accesses (e.g., data in matrices)
+
+   “important” refers to items that are requested by          This sequence of memory addresses has both types of
+     CPU frequently or expected to be requested soon            locality
+     …                                                                                                    What will happen at the first
+                                                                1, 2, 3, 1, 2, 3, 8, 8, 47, 9, 10, 8, 8 ...request by the CPU?
+                                                                                                          (compulsory misses)
+   How to do I anticipate/identify “important” items?                                                     How do I manage my cache
+                                                                 spatial   temporal       non-local
+                                                                                                          to honor temporal locality?
+   * Temporal and Spatial locality …                                                                      How do I utilize spatial
+                                                                                                          locality?
+
+
+
+
+       How does HW manage cache?                                                Cache Vocabulary
+                                                               • cache hit: an access where the item is already in
+Taking advantage of temporal locality:                           cache
+  Bring an item into cache whenever it is referenced;
+  If the cache is “full”, kick out something that has not      • cache miss: an access where the item is not in cache
+    been used recently;
+  (keep a time-stamp for the cache item that is furthest in
+                                                               • cache block size or cache line size: the amount of
+    the past)
+                                                                 data that gets transferred on a cache miss
+Taking advantage of spatial locality:
+  While serving a request from CPU, bring to cache a block     • instruction cache (I-cache): cache that
+   of contiguous items (cache-line), not just the requested      can only hold instructions
+   item (i.e., retrieve consecutive words from MM)
+  Needs suitable cache architecture to support this:           • data cache (D-cache): cache that can only
+                                                                 hold data
+  Multi-word cache
+                   Cache Issues                            Direct-Mapped Cache
+On a memory request,                                Location in cache determined by MM-address
+                                                    Direct mapped: MM  cache, is fixed, i.e., the destination
+How does hardware know if it is a hit or miss in
+ the cache?                                          in cache is unique;
+                                                                                                   Many-to-one
+                                                       (Block address) modulo (#Blocks in cache)
+                                                                                                             mapping
+                                                                                   Assume: Width of address bus: 5 bits
+On a cache miss,                                       8 blocks                    Addressable Memory Space = 25 = 32 blocks
+                                                                                   MM-size = 32 blocks (a block might comprise
+• where to put the new item?                                                       several words);
+                                                                                   Cache size: 8 blocks
+• which item to throw out to make room?            32 blocks                                           #Blocks is a power of 2
+                                                                                                        Use low-order address
+• how to remember which item is where?
+                                                                                                    
+
+                                                                                                        bits;
+                                                                                                       CPU generates MM-
+                                                                                                        address;
+                                                                                                       How it is converted to
+                                                                                                        cache address (index)?
+
+
+
+
+ Does a cache entry contain garbage?                       Tags and Valid Bits
+• Problem: when a program starts up, cache is             How do we know which particular block is
+  empty (garbage).                                         stored in a cache location?
+                                                            Store missing part of block address as well as
+  – It might contain data left from previous
+    program/random bits;                                     the data (cache data means instructions/data)
+                                                            Actually, only need the high-order bits
+  – How do you make sure you don’t match a tag
+    accidentally?                                           Called the tag (resolves the problem of many-
+
+                                                             to-one mapping: MM Cache)
+• Solution:
+                                                          What if there is no data in a location?
+• An extra “valid” bit per cache-entry                      Valid bit: 1 = present, 0 = not present
+                                                            Initially all valid-bits set to 0; a valid-bit is set
+
+                                                             to 1, when the requested item is loaded from
+                                                             MM to cache
+                                                                                                                                  MM address requests:
+    Direct-Mapped Cache                                                                   Cache Example                           22, 26, 22, 26, 16, 3, 16, 18
+
+ Location in cache determined by MM-address                                               5-bit MM-address
+ Direct mapped: only one choice                                                           8-blocks, 1 word/block, direct-mapped
+       (Block address) modulo (#Blocks in cache)                                          Initial state
+
+                                                                                                 Cache      Valid         Tag       Data
+                                                                                                 Index      bit
+8 blocks
+                                                CPU generates MM-address;                       000        0
+                                                How it is converted to cache                    001        0
+                                                 address (index)?                                010        0
+                                                                                                 011        0
+                                    32 blocks
+                                                            MM-address:                          100        0
+                                                            00001                                101        0
+                                                                                                 110        0
+                                                       tag-bits
+                                                                     cache-index                 111        0
+
+
+
+
+                                        MM address requests:                                                                      MM address requests:
+    Cache Example                       22, 26, 22, 26, 16, 3, 16, 18                         Cache Example                       22, 26, 22, 26, 16, 3, 16, 18
+
+            Word addr     Binary addr          Hit/miss   Cache block                             Word addr         Binary addr          Hit/miss   Cache block
+                 22            10 110           Miss          110                                      26                11 010           Miss         010
+
+
+
+           Cache      V   Tag           Data                                                     Cache      V       Tag           Data
+           Index                                                                                 Index
+           000        0                                                                          000        0
+           001        0                                                                          001        0
+           010        0                                                                          010        1       11            Mem[11010]
+           011        0                                                                          011        0
+           100        0                                                                          100        0
+           101        0                                                                          101        0
+           110        1   10            Mem [10110]                                              110        1       10            Mem[10110]
+           111        0                                                                          111        0
+
+                           Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 39                             Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 40
+                                MM address requests:                                                              MM address requests:
+Cache Example                   22, 26, 22, 26, 16, 3, 16, 18                    Cache Example                    22, 26, 22, 26, 16, 3, 16, 18
+
+                                                                                     Word addr      Binary addr          Hit/miss   Cache block
+    Word addr     Binary addr          Hit/miss   Cache block
+                                                                                          16             10 000           Miss         000
+         22            10 110            Hit         110
+                                                                                            3            00 011           Miss         011
+         26            11 010            Hit         010
+                                                                                          16             10 000            Hit         000
+   Cache      V   Tag           Data                                                Cache       V   Tag           Data
+   Index
+                                                                                    Index
+   000        0
+                                                                                    000         1   10            Mem[10000]
+   001        0
+                                                                                    001         0
+   010        1   11            Mem[11010]
+                                                                                    010         1   11            Mem[11010]
+   011        0
+                                                                                    011         0   00            Mem[00011]
+   100        0
+                                                                                    100         0
+   101        0
+                                                                                    101         0
+   110        1   10            Mem[10110]
+                                                                                    110         1   10            Mem[10110]
+   111        0
+                                                                                    111         0
+                  Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 41            18             10 010           Miss         010
+
+
+
+
+                                MM address requests:
+Cache Example                   22, 26, 22, 26, 16, 3, 16, 18
+
+    Word addr     Binary addr          Hit/miss   Cache block
+         18            10 010           Miss         010
+
+
+
+   Cache      V   Tag           Data
+   Index                                                          New item
+   000        1   10            Mem[10000]                        is entered
+   001        0                                                   re-writing
+   010        1   10            Mem[10010]                        the
+                                                                  previous
+   011        1   00            Mem[00011]
+                                                                  one
+   100        0
+   101        0
+   110        1   10            Mem[10110]
+   111        0
+
+                  Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 43
+

@@ -1,0 +1,349 @@
+CS–2710-1                            Spring 2026                        CPU  Cache  MM
+Computer Organization and Systems (COS)
+
+AI/ML                                                                         Control       Datapath           Cache Memory
+DS/LLM                                                                                       ALU
+                           Lecture #20
+                                                                                                                Main Memory
+                           17 April 2026                                     Registers       PC                    (MM)
+
+                                                                                 Processor (CPU)                   Memory
+
+CO       CA
+     CO CA
+               Ashoka University                              BBB
+
+
+
+
+Memory Hierarchy Levels                                             Issues in Cache Management
+                      Block (aka line): unit of copying               Block placement: MM  Cache
+                          May be multiple words
+                                                                        - direct-mapped, set-associative, fully associative
+                      If requested item (I/D) is present in
+                       upper level                                   Block identification: index, tag, valid-bit
+                           Hit: access satisfied by upper level
+                                                                     Block replacement: LRU, LFU, random
+                       
+
+                               Hit ratio: hits/accesses
+     cache            If requested item is absent                   Write strategy (CPU wants to store data in
+                           Miss: block copied from lower level
+                       
+
+                               Time taken: miss penalty
+                                                                      Mem): write-through, write-back (dirty-bit)
+                               Miss ratio: misses/accesses          Miss handling:
+                                = 1 – hit ratio
+          MM              Then the item is supplied from upper         -- cache read miss
+                           level
+                                                                        --- cache write miss
+                                                                             * write-allocate, no-write-allocate
+   Memory Hierarchy Basics                                                               Memory Hierarchy Basics
+                                                                                      Hit-time (time to match a requested item in cache and if
+       When a word is not found in the cache, a miss                                  found, to transfer it to CPU); time measured in clock cycles;
+        occurs:                                                                       Miss rate
+
+         Fetch word from lower level in hierarchy, requiring a                          Fraction of cache requests that result in misses
+          higher latency reference                                                    Miss-penalty (time to pull an item to cache from the lower
+         Lower level may be another cache or the main                                 level and to transfer it to CPU)
+          memory                                                                          Causes of misses
+         Also fetch the other words contained within the block
+                                                                                                Compulsory
+                Takes advantage of spatial locality
+                                                                                                        First reference to a block
+           Place block into cache in any location within its set,                              Capacity
+            determined by address
+                                                                                                        Blocks discarded and later retrieved
+                                                                                                Conflict
+                                                                                                        Program makes repeated references to multiple addresses from
+                                                                                                         different blocks that map to the same location in the cache
+
+
+
+
+MM-Address to Cache-Address                            MM-address – 32 bits;                                                                                      MM-address – 32 bits;
+                                                                                      Example 2:
+Resolution (Block size = 1 word)                       Cache: 1 K blocks;                                                                                         Cache: 2 K blocks;
+                                                                                      Set-Associative Cache                                                       1 block = 1 word (32 bits)
+Hardware realization                                   1 block = 1 word
+                                                       Direct-mapped, write              Cache index = MM-address mod 1024                                        2-way set-associative;
+                                                       through;                                                                                                   # sets (# cache rows) =
+                                                       What will be the
+                                                                                         31 30 29 28 27 ........... 17 16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 0   1024, each set size = 2;
+                                                                                                   tag                                       index
+                                                                                                                                                                  write back
+                                                       cache size?                                 20                                           10          2
+                                                                                                                 valid   tag d.b.    data      valid   tag d.b. data
+                                                                                                                                                                          d.b.  (dirty-bit)
+                                                                                                                0
+                                                # rows (cache-lines) = 1024;                                    1
+                                                                                                                2
+
+                                                Each row comprises                                             ...
+                                                                                                               ...
+                                                                                                               ...
+                                                1 (valid-bit) + 20 (tag-bits) +
+                                                                                                                                                                           Q. What will
+                                                32 (data-bits) = 53 bits;
+                                                Write-through does not                                         ...
+                                                                                                                                                                           happen if this
+                                                need any extra bit;
+                                                                                                             1021
+                                                                                                             1022                                                          cache becomes
+                                                                                                             1023
+
+                                                Total size of the cache                                                                                                    fully associative?
+                                                = 53 1024 bits = 53 Kbits                                               =                             =
+                                                                                  hit/miss                                                                 Cache size
+                                                                                                                                                           = (1 + 1 + 20 + 32)  2  1024 bits
+                                                                                                                                                           = 108 K-bits
+      Spectrum of Associativity                                                      How to take care of Spatial Locality?
+         For a cache with 8 entries
+                                                                                          Idea: When an item x (I/D) is requested by CPU:
+
+                                                                                          1. Transfer x from MM  Cache  CPU;
+
+                                                                                          2. Also transfer a few words from MM  Cache
+                                                                                          that are adjacent to x (even though they have not
+                                                                                          been requested by CPU, now);
+
+                                                                                          In other words, cache should support the transfer of
+                                                                                          multiple words from MM;
+
+
+
+
+Cache size (for write-through)
+= [(1 + 18) + (16  32)]  256 bits   Multi-Word Cache Block                       Solution: To reduce miss-penalty: Multi-Word Cache Block
+                                                                                   1. Early restart the CPU as soon
+= 132.75 K-bits                       Read-request for one word  the full
+                                                                                       as the requested word arrives Read-request for one word  the full
+Larger cache-blocks aid               block (16 words) is lifted to cache                                                block (16 words) is lifted to cache
+                                                                                       at the cache;
+spatial locality,  reduce                     4 K Cache words;                    2. Lift the critical-word first, from             Larger cache-blocks aid
+compulsory misses and                          Multi-word cache-block              Mem to cache;                                     spatial locality,  reduce
+miss-rate; but increases
+                                               16 words/block                                                                         compulsory misses and
+miss penalty, conflict and
+                                                256 cache-lines (blocks)                                                             miss-rate; increases miss
+capacity misses
+                                               (2)                                                                              (2)   penalty
+
+                                           = (16  32)                                                                       (16-word cache block)
+
+
+                                                                        Cache-
+                                                                        size for
+                                                                        write-
+                                                                        back?
+Parameters in Cache Management                             Improving Cache Performance
+Average memory access time (AMAT)                             Six basic cache optimizations:
+= hit-time + (miss-rate  miss-penalty)                            Larger block size
+                                                                        Reduces compulsory misses
+Note: hit-time and miss-penalty are expressed in                        Increases capacity and conflict misses, increases miss penalty
+
+# clock cycles                                                     Larger total cache capacity to reduce miss rate
+                                                                        Increases hit time, increases power consumption
+                                                                   Higher associativity
+                                                                         Reduces conflict misses
+Average # memory-stall cycles (AMSC) =                               
+
+                                                                        Increases hit time, increases power consumption
+(# memory requests/IC)  miss-rate  miss-penalty                  Higher number of cache levels
+                                                                        Reduces overall memory access time
+                                                                   Software techniques (programmer or compiler driven)
+CPU-time = IC  CPI  CCT                                          (Loop-merging, loop-interchange, cache-friendly data structure)
+         = IC  (Ideal-CPI + AMSC)  CCT
+Ideal-CPI refers to the case when we have perfect cache,
+i.e., without any misses
+
+
+
+
+  Improving Cache Performance                                                                       Virtual Memory
+                                                                                                    (CPU views SM as if it is MM)
+    Example: loop-interchange
+                                                                         cache
+    Depending on the data structure and/or how the
+    data is stored in MM, cache miss-rate can be                          |MM| >> |cache|              View main memory (MM) as a
+    reduced just by interchanging the indices in a                                                     “cache” for secondary memory
+    nested loop.                                                                                        (SM)
+                                                                              MM
+                                                                                                            Managed jointly by CPU
+                                                                                                             hardware and the operating
+                                                                                                             system (OS)
+
+                                                           Secondary Memory
+                                                           (Flash, Hard disk, SSD, CD)
+                                                                   |SM| >> |MM|
+Virtual Memory                                                                       Logical vs. Physical Address Space
+   Use main memory as a “cache” for                                                The concept of a logical address space that is bound to a
+    secondary (disk) storage                                                         separate physical address space is central to proper memory
+                                                                                     management
+       Managed jointly by CPU hardware and the                                          Logical address – generated by the CPU; also referred to
+        operating system (OS)                                                             as virtual address
+   Programs share main memory                                                           Physical address – address seen by the memory unit
+                                                                                
+     Each gets a private virtual address space                                      Logical and physical addresses are the same in compile-time
+                                                                                     and load-time address-binding schemes; logical (virtual) and
+      holding its frequently used code and data                                      physical addresses differ in execution-time address-binding
+     Protected from other programs                                                  scheme
+                                                                                    Logical address space is the set of all logical addresses
+   CPU and OS translate virtual addresses to                                        generated by a program
+    physical addresses                                                              Physical address space is the set of all physical addresses
+     VM “block” is called a page                                                    generated by a program
+
+     VM translation “miss” is called a page fault
+
+
+
+
+CPU  Cache  MM  SM                                                     Virtual Memory
+                                                                           CPU generates logical address (LA): 32-bit; can address 230 words;
+                                CPU generates logical address (LA)
+         Processor (CPU)                        Memory
+                                                                                                        Cache Memory
+
+        Control     Datapath                  Cache Memory
+                                                                               CPU
+                      ALU
+                                                                                                            MM
+                                                                                                                                                     MM
+     Registers                                Main Memory
+                      PC                         (MM)                                                   Secondary
+                                                                                                        Memory (SM)
+                                              Secondary
+    Cache-hardware translates                 Memory (SM)
+    PA of MM, to cache-index                                                                                   page
+
+    OS translates LA to physical    LA-space >> Physical Address
+    address (PA) of MM              (PA)-space of MM, particularly for
+                                    shared-memory multi-processing
+                                                                         LAS (Logical Address Space)
+ Virtual Memory                                                           Mapping Pages to Storage
+ CPU generates logical address (LA): 32-bit; can address 230 words;
+
+
+                         Cache Memory
+
+     CPU
+                           MM (228 words)
+OS translates LA
+to physical address                                               MM
+                                                             size of MM
+(PA) of MM (32  30)     Secondary                               28
+                                                             = 2 words
+                         Memory (SM)
+#address-bits to
+access MM                        Memory
+= 30 bits                                       LAS (230 words)
+                                 page
+|LAS| =230 words;                         |MM| = 228 words;
+each page size = 1 K-words;               each page size = 1 K-words;
+# pages in SM = 220;                      # pages in MM = 218;                                Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 22
+
+
+
+
+     Translation Using a Page Table                                       Page Tables
+  LAS                            Page-size: 4 K-bytes = 1 K-words)
+                    MM
+                                                                             Stores placement information
+                                                                               Array of page table entries, indexed by virtual
+                                                                                page number
+                                                                               Page table register in CPU points to page
+
+                   SM                                                           table in physical memory
+                                                                             If page is present in memory
+               LAS (logical
+               address space)                                                  PTE (Page Table Entry) stores the physical
+               = 230 words                                                      page number
+                220 pages;
+                                                                               and other status bits (referenced, dirty, …)
+               MM (physical
+     MM        address space):
+                                                                             If page is not present
+size of MM     = 228 words                                                       PTE can refer to location in on disk
+= 228 words     218 pages;          # rows in the Page Table = 220;
+= 230 bytes
+Page Fault Handler                                                                    Page Fault Penalty
+ Use faulting virtual address to find PTE                                               On page fault, the page must be fetched
+ Locate page on disk                                                                     from disk
+ Choose page to replace
+                                                                                           Takes millions of clock cycles
+                                                                                           Handled by OS code
+       If dirty, write to disk first
+ Read page into memory and update page                                                  Try to minimize page fault rate
+  table                                                                                    Fully associative placement
+                                                                                           Smart replacement algorithms
+ Make process runnable again
+
+       Restart from faulting instruction
+
+
+                       Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 25                       Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 26
+
+
+
+
+Replacement and Writes                                                                Fast Translation Using a TLB
+   To reduce page fault rate, prefer least-                                             Address translation would appear to require
+    recently used (LRU) replacement                                                       extra memory references
+     Reference bit (aka use bit) in PTE set to 1 on                                       One to access the PTE
+      access to page
+                                                                                           Then the actual memory access
+     Periodically cleared to 0 by OS
+
+     A page with reference bit = 0 has not been
+                                                                                         But access to page tables has good locality
+      used recently                                                                        So, use a fast cache of PTEs within the CPU
+   Disk writes take many cycles                                                           Called a Translation Look-aside Buffer (TLB), which is
+
+                                                                                            some kind of cache for page table
+     Block at once, not individual locations
+                                                                                           Misses could be handled by hardware or software
+     Write through is impractical
+     Use write-back
+
+     Dirty bit in PTE set when page is written
+
+
+                       Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 27                       Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 28
+Fast Translation Using a TLB                                                         TLB Misses
+                                                                                        If page is in memory
+                                                                                          Load the PTE from memory and retry
+                                                                                          Could be handled in hardware
+
+                                                                                                 Can get complex for more complicated page table
+                                                                                                  structures
+                                                                                            Or in software
+                                                                                                 Raise a special exception, with optimized handler
+                                                                                        If page is not in memory (page fault)
+                                                                                          OS handles fetching the page and updating
+                                                                                           the page table
+                                                                                          Then restart the faulting instruction
+
+
+                      Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 29                           Chapter 5 — Large and Fast: Exploiting Memory Hierarchy — 30
+
+
+
+
+Concluding Remarks                                                                   Important Announcement
+   Fast memories are small, large memories are                                      Wednesday, 22 April 2026:
+    slow                                                                             Review and Doubt-Clearing Class
+       We really want fast, large memories                                         COS Class-Test #2
+       Caching gives this illusion                                                    Friday, 24 April 2026; in class;
+   Principle of locality                                                                Open-book, open-notes; no electronics;
+       Programs use a small part of their memory space                                  Only handwritten sheets, printed material,
+        frequently
+                                                                                         and books allowed;
+   Memory hierarchy
+       L1 cache  L2 cache  …  DRAM memory
+                                                                                         Calculators allowed;
+         disk                                                                           Credit = 20%;
+   Memory system design is critical for                                                 Time: 10:15 AM – 11:45 AM;
+    multiprocessors
+                                                                                        Coverage: Lecture #10 - Lecture #20;
+

@@ -1,0 +1,502 @@
+ CS–2710-1                       Spring 2026                                                               Processor Design
+                                                                Single-Cycle Processor (one instruction/clock cycle)
+Computer Organization and Systems (COS)
+                                                                                                    CCT
+
+
+ AI/ML
+                                                                 IF        ID/RR  EX  Mem  WB (5 Stages)
+ DS/LLM                 Lecture #15
+                        01 April 2026                                   CCT
+
+
+                                                                 Multi-Cycle Processor (one stage/clock cycle)
+ CO       CA
+                                                             • CPU time = IC * CPI * CCT
+                                                                – Single-cycle machine needs large CCT  CPU-time 
+                 Ashoka University                 BBB
+                                                                – Multi-cycle processors support pipelining
+                                                                    CCT/CPI   CPU-time   performance 
+
+
+
+
+                                                                     What Is Pipelining: Laundry Example
+               What is Pipelining
+                                                                    6 PM      7       8        9        10       11     Midnight
+• Laundry Room                                                                              Time (in minutes)
+
+                                                                      30 40 20 30 40 20 30 40 20 30 40 20
+• Four students A, B, C, D                               T
+  each has one load of clothes     A   B   C   D         a       A
+                                                         s
+  to wash, dry, and fold                                 k
+                                                                                                       Washer is idle
+                                                                B
+                                                         O
+• Washer takes 30 minutes
+                                                         r             washing 30 mins
+                                                         d      C
+                                                                       drying 40 mins
+                                                         e             folding 20 mins
+• Dryer takes 40 minutes                                 r      D      Total: 90 mins
+
+• Folder takes 20 minutes                                Sequential laundry takes 6 hours for four users; Work finishes at 00:00
+                                                         If they learned pipelining, how long would laundry take?
+                                                                                                                      Only one resource
+                                                   3                                                                                4
+                                                                                                                      is busy at a time
+                Basic Idea of Pipelining                                                            Impact of Pipeline Stages
+                Minimize idle-time for resources
+             6 PM          7         8          9      10         11     Midnight                 6 PM     7      8         9         10      11   Midnight
+                                          Time                                                                            Time
+
+                 30 40 40 40 40 20                                                                  30 40 20                     • Q1. What is the time
+    T                                                                                    T
+    a       A                   • Pipelined laundry takes 3.5                            a      A                40                difference between two
+    s                             hours for 4 loads                                      s                                         consecutive finish-times?
+    k                           • Speed-up = 6/3.5 = 1.714                               k
+            B                                                                                                                    • time required to move an
+                                                                                                B
+    O                                                                                    O                                         instruction one step forward
+    r                                                                                    r Q2. What is the maximum
+    d   C                                                                                d
+                                                                                                                                 •  longest time (slowest)
+    e                                                                                    e speed-up compared to                    among pipe-stages
+    r                                                                                    r non-pipelined approach??
+        D                                                                                                                   • Speed-up when n  
+                multiple resources                                                            limited by the number of        90/40 = 2.25
+                overlapped in time                                                           pipe-stages
+                                                                                5                                             < 3 (number of pipe-stages)
+                                                                                                                                                     6
+
+
+
+
+                        Pipelining Lessons
+                                                                                         Learned So Far ….
+                                                    • Pipelining doesn’t help
+            6 PM       7        8          9          latency of single task, it helps    Pipelining is widely used in modern
+                                                      throughput of entire workload
+                                         Time
+                                                    • Pipeline rate limited by             processors.
+T                                                     slowest pipeline stage
+a               30 40 40 40 40 20                                                         Pipelining improves system performance in
+                                                    • Multiple tasks operating
+s
+k       A                                             simultaneously                       terms of throughput.
+                                                    • Potential speed-up < Number
+O                                                     pipe stages (pipe-depth)            Pipelined organization requires sophisticated
+r       B                                           • Unbalanced lengths of pipe
+                                                                                           compilation techniques.
+d                                                     stages reduces speed-up
+e                                                   • Time to “fill” pipeline and time
+r       C                                             to “drain” it reduces speedup
+                                                    • Stall for Dependences
+        D
+
+                                                                                7
+Making Program Execution Faster                                       MIPS Pipeline
+                                                                            Five stages, one step per stage
+ Arrange the hardware so that more than one                                1. IF: Instruction fetch from memory
+  operation can be overlapped at the same                                   2. ID/RR: Instruction decode & register read
+  time.                                                                     3. EX: Execute operation or calculate address
+ The number of operations performed per                                    4. MEM: Access memory operand
+  second is increased even though the elapsed                               5. WB: Write result back to register
+  time needed to perform any one operation is
+  not changed.                                                             IF             ID/RR EX  Mem  WB
+
+
+
+
+                                                                                                                            Chapter 4 — The Processor — 10
+
+
+
+
+Datapath
+ Instruction
+    Fetch      With
+             Register Read Control
+             Instr. Decode/  Execute/
+                            Addr. Calc
+                                       Memory Write
+                                       Access Back
+                                                                                                A pipeline diagram
+                                                                                                             Clock cycle (time)
+                                                                                            1    2      3      4      5       6    7      8       9
+                                                                     lw    $t0, 4($sp)     IF   ID     EX    MEM     WB
+                                                                     sub   $v0, $a0, $a1        IF     ID     EX    MEM WB
+                                                                     and   $t1, $t2, $t3               IF     ID     EX     MEM   WB
+                                                                     or    $s0, $s1, $s2                      IF     ID      EX   MEM    WB
+                                                                     add   $sp, $sp, -4                              IF      ID    EX    MEM     WB
+
+
+                IF  ID/RR  EX  Mem  WB
+                                                                      A pipeline diagram shows the execution of a series of instructions.
+                                                                          — The instruction sequence is shown vertically, from top to bottom.
+                                                                          — Clock cycles are shown horizontally, from left to right.
+                                                                          — Each instruction is divided into its component stages.
+                                                                      Overlapping of instructions: five instructions are active in the fifth cycle:
+                                                                      Why balanced stages??
+                                                                     - logistics;
+                                                                     - speed-up is determined by the time needed by the longest stage, anyway;
+                                                                                                                                                      12
+                                    Chapter 4 — The Processor — 11
+                           Pipeline terminology                                                Pipeline Datapath: Resource Requirements
+                                             Clock cycle                                                                                Clock cycle
+                       1     2      3      4       5      6    7     8     9                                1    2         3          4       5      6        7    8      9
+lw    $t0, 4($sp)     IF    ID     EX    MEM     WB                                  lw    $t0, 4($sp)     IF   ID        EX        MEM     WB
+sub   $v0, $a0, $a1         IF     ID     EX     MEM WB                              lw    $t1, 8($sp)          IF        ID         EX     MEM WB
+and   $t1, $t2, $t3                IF     ID      EX    MEM   WB                     lw    $t2, 12($sp)                   IF         ID      EX    MEM    WB
+or    $s0, $s1, $s2                       IF      ID     EX   MEM   WB               lw    $t3, 16($sp)                              IF      ID     EX    MEM     WB
+add   $sp, $sp, -4                                IF     ID    EX   MEM    WB        lw    $t4, 20($sp)                                      IF     ID     EX     MEM    WB
+
+
+                             filling            full           emptying               We need to perform several operations in the same cycle.
+                                                                                        — Increment the PC and add registers at the same time.
+                                                                                        — Fetch one instruction while another one reads or writes data.
+ The pipeline depth is the number of stages—in this case, five.                      What does this mean for our hardware?
+ In cycle 5, the pipeline is full. Five instructions are being executed
+  simultaneously, so all hardware units are in use => speed-up < 5
+
+
+
+
+                                                                                13                                                                                            14
+
+
+
+
+               Pipelining Multiple Instruction-Types                                          A solution: Insert NOP (No-Operation) stages
+
+ R-type instructions only require 4 stages: IF, ID, EX, and WB                       Enforce uniformity
+   — We don’t need the MEM stage                                                        — Ensure that all instructions take 5 cycles/stages
+ What happens if we try to pipeline loads with R-type instructions?                    — Make them have the same stages, in the same order
+                                                                                           • Some stages will do nothing for some instructions
+                                                                                                 R-type              IF        ID       EX     NOP       WB
+                                            Clock cycle                                                                                 Clock cycle
+                       1     2      3     4       5      6     7     8     9                                1    2         3          4       5      6        7    8      9
+add   $sp, $sp, -4    IF    ID     EX    WB                                          add   $sp, $sp, -4    IF   ID        EX        NOP     WB
+sub   $v0, $a0, $a1         IF     ID    EX     WB                                   sub   $v0, $a0, $a1        IF        ID         EX     NOP WB                     Mem: NOP
+lw    $t0, 4($sp)                  IF    ID      EX    MEM    WB                     lw    $t0, 4($sp)                    IF         ID      EX    MEM    WB
+or    $s0, $s1, $s2                      IF      ID     EX    WB                     or    $s0, $s1, $s2                             IF      ID     EX    NOP     WB
+lw    $t1, 8($sp)                                IF     ID    EX    MEM    WB        lw    $t1, 8($sp)                                       IF     ID     EX     MEM    WB
+
+
+                                                                                             • Stores and Branches have NOP stages, too…
+                                 Solution??                                                       store              IF        ID        EX    MEM       NOP       WB: NOP
+                                                                                                  branch             IF        ID        EX    NOP       NOP       Mem: NOP,
+                                                                                                                                                                   WB: NOP
+                                                                                15                                                                                            16
+                                 Learned So Far ….                                                    Pipeline Speed-up
+      Pipelining attempts to maximize instruction throughput by overlapping, in
+       time, the execution of multiple instructions.                                                     If all stages are balanced
+                                                                                                           i.e., all take the same time
+      All instructions must pass through the same number of stages (required
+       plus NOPs)                                                                                          Speed-up < k (pipe-depth)
+
+
+      Pipelining offers speed-up that is bounded by the number of pipe-stages                         If not balanced, speed-up is less
+        — In the best case, one instruction finishes on every cycle, and the
+                                                                                                       However, life is not that simple; actual
+          speed-up is equal to the pipeline depth.
+        — Each stage needs is own functional units                                                      speed-up might be further affected due to:
+                                                                                                       -- pipeline overhead
+
+                                                                                                       -- pipe hazards
+
+
+
+                                                                                       17
+                                                                                                                                                       Chapter 4 — The Processor — 18
+
+
+
+
+      Pipeline issues                                                                                                           Solution??
+                                      Time (clock cycles)        WB: where to write?                      IF            ID/RR              EX             Mem  WB
+
+       Inst 0      IF                     Mem    WB              add $t3, $t1, $t2
+                                  EX
+
+
+
+
+                          ID/R
+I
+n
+                                                                         Once the pipeline
+s
+       Inst 1             IF                     Mem    WB                       is full, one
+                                           EX
+
+
+
+
+                                  ID/R
+t
+r.                                                                            instruction is
+                                                                          completed every
+       Inst 2                    IF                     Mem      WB      cycle, so CPI  1
+                                                  EX
+
+
+
+
+O                                         ID/R
+r                                                                          when n is large
+d                                                                                               Use latches between
+                                          IF                     Mem    WB
+                                                            EX
+
+
+
+
+                                                 ID/R
+e      Inst 3                                                                                   adjacent stages
+r                                                                                               pipelining states
+                                                                                                (overhead)
+       Inst 4                                    IF                    Mem     WB
+                                                                 EX
+
+
+
+
+                                                        ID/R
+                                                                                                Latch-contents should be propagated forward as
+                   Time to fill the pipeline                                                    the pipeline advances
+                                                                                                                              Cons: Adds pipeline overhead; slows down the
+      Information regarding destination-register-ID for Inst-0 is no longer
+                                                                                                                              pipeline
+      available, because Inst-4 has already entered into the pipeline                                                          Appendix A - Pipelining                     20
+  Pipelining: Executing a Program Faster                Pipelining: Executing a Program Faster
+• Pipelining involves executing an instruction
+  over multiple clock cycles
+• Most importantly, it enables executing
+  multiple instructions per cycle
+• In other words, multiple instructions are
+  overlapped in time, thus enabling speed-up
+• However, in every cycle, each resource is
+  only used by at most one instruction
+• CPI reduces (ideally, CPI becomes equal to           CPU-time needed by a single-cycle processor
+  1 in the absence of hazards)                         = 2400 ps
+
+
+
+
+Pipelining: Executing a Program Faster              MIPS Pipeline: Why do you need inter-stage
+                                                    latches (Pipeline Registers)?
+
+
+
+
+                                      Speed-up                          ID/
+                                                         IF                             EX             Mem              WB
+                                      = 2400/1400                       RR
+                                      = 1.714
+                                                    • Pipeline registers (latches) are inserted between two consecutive pipeline
+                                                      stages
+                                                    • All the registers are synchronized with the system clock and seamlessly
+                                                      transfer instruction-bits and other intermediate data forward, across
+CPU-time needed by a 5-stage pipeline processor       consecutive pipeline stages
+= 1400 ps
+                                                     Pipeline registers
+      Need registers between stages
+                                                                                                Pipeline Hazards
+         to hold information concerning the previous cycles
+                                                                                                 Situations that prevent starting the next
+         to pass information forward in every clock cycle
+                                                                                                  instruction in the next cycle; slows down
+            IF             ID/RR                EX              Mem  WB                       the pipeline!
+                                                                                                 Structural hazards
+                                                                                                        A required resource is busy
+                                                                                                   Data hazard
+                                                                                                        Need to wait for previous instruction to
+                                                                                                         complete its data read/write
+                                                                                                   Control hazard
+Use latches between                                                                                     Deciding on control action depends on
+adjacent stages:
+pipelining states
+                                                                                                         previous instruction
+(space/time overhead)                  Latch-contents should be propagated forward as
+                                                          Chapter 4 — The Processor — 25                                                               Chapter 4 — The Processor — 26
+                                       the pipeline advances in sync. with clock cycles
+
+
+
+
+       Hazards - Elaborated                                                                Structural Hazard due to Memory Access Conflict
+           structural hazards: attempt to use the same resource by                                       Time (clock cycles)
+            two different instructions at the same time
+           data hazards: attempt to use data before it is ready                                                                                       Reading data from
+                                                                                                lw           IF                   Mem    WB
+
+
+
+
+                                                                                                                           EX
+                                                                                                                    ID/R
+                                                                                           I                                                           memory
+               - An instruction’s source operand(s) are yet to be                          n
+                 produced by a prior instruction, which is still in the                    s
+                                                                                                Inst 1              IF                   Mem    WB
+
+
+
+
+                                                                                                                                  EX
+                                                                                           t                               ID/R
+                 pipeline
+                                                                                           r.
+           control hazards: attempt to make a decision about
+                                                                                                Inst 2                     IF                   Mem      WB
+
+
+
+
+                                                                                                                                         EX
+            program control flow before the condition has been                             O                                      ID/R
+
+            evaluated and the new PC target address calculated                             r
+                                                                                           d
+               - branch instructions                                                            Inst 3                            IF                    Mem      WB
+
+
+
+
+                                                                                                                                                EX
+                                                                                           e                                             ID/R
+           Can always resolve hazards by waiting (inserting                               r
+            “bubbles” in the pipeline) – pipeline stall                                                                                  IF                     Mem     WB
+                                                                                                Inst 4
+
+
+
+
+                                                                                                                                                         EX
+                                                                                                                                                ID/R
+                                                                                                             Reading instruction
+               pipeline controller must detect the hazard
+                                                                                                             from memory
+               and take action to resolve hazards
+                                                                                                 Solution: Use separate instruction and data memory
+               Bubbles may be needed to handle cache misses as well (may
+                not be truly termed as hazard)!                                                     modules (Recall single-cycle case as well)
+      Structural Hazards                                                                                 Data Hazards
+       Conflict for use of a resource                                                                     These occur when at any time, there are active
+                                                                                                           instructions that need to access the same data
+       In MIPS pipeline, with a single memory                                                             (memory or register) locations
+
+           Load/store requires data access                                                                Where there’s real trouble is when we have:
+           Instruction fetch would have to stall for that
+
+            cycle                                                                                          instruction A
+                                                                                                           instruction B
+                  Would cause a pipeline “bubble” (stalls)
+         Hence, pipelined datapaths require                                                               and B wants to manipulate (read or write) data before
+                                                                                                           A does. This violates the order of the instructions,
+          separate instruction/data memories                                                               since the architecture implies that A completes
+             Or, separate instruction/data caches                                                         entirely before B is executed.
+
+
+                                                                   Chapter 4 — The Processor — 29                                                             Chapter 4 — The Processor — 30
+
+
+
+
+      Example: Hazards due to Register File Access                                                       Solution: Register Write-Read Hazard?
+                                                                                                                                   Time (clock cycles)
+                                        Time (clock cycles)
+                                                                                                                                                                    Fix register access
+      Inst 0                                                                                             add $1, IF                      Mem    WB                     hazard by doing
+
+
+
+
+                                                                                                                                  EX
+                                                                                                                           ID/R
+                      IF                      Mem    WB                                             I
+                                       EX
+
+
+
+
+add $1,$3,$4                    ID/R                                $1: destination register                                                                          writes in the first
+                                                                                                    n
+                                                                                                    s                                                                 half and reads in
+ I                                                                                                       Inst 1            IF                   Mem    WB           the second half of
+
+
+
+
+                                                                                                                                         EX
+                                                                                                    t                             ID/R
+      Inst 1                    IF                   Mem      WB
+                                              EX
+
+
+
+
+ n                                     ID/R
+                                                                                                    r.                                                                   the clock cycle
+ s
+ t                                                                                                       Inst 2                   IF                   Mem        WB
+
+
+
+
+                                                                                                                                                EX
+                                                                                                    O                                    ID/R
+      Inst 2                           IF                   Mem        WB
+                                                     EX
+
+
+
+
+ r.                                           ID/R
+                                                                                                    r
+                                                                                                    d
+ O                                                                                                       add $2,$1,                      IF                      Mem     WB
+
+
+
+
+                                                                                                                                                         EX
+                                                                                                    e                                           ID/R
+      add $2,$1,$5                            IF                      Mem      WB
+                                                              EX
+
+
+
+
+ r                                                   ID/R
+                                                                                                    r
+ d
+ e
+          $1: source register                                                                             Half-cycle R/W
+ r                                                                                                        solution!
+
+                                                                                                                                                 clock edge that initiates
+                                                                                                             clock edge that triggers
+                                                                                                                                                 loading/reading of
+                                                                                                             register writing to
+                                                                                                                                                 pipeline state registers
+                                                                                                             destination registers
+     Example: Half-Cycle Register Read/Write
+                                                                     Important Announcement
+             (to mitigate data hazard)
+                                                           COS: Upcoming Classes
+add $1,$3,$4
+lw …                                                       There will be one make-up class in the ONLINE MODE
+sw …                                                       as mentioned below (Please mark your calendar);
+add $2,$1,$5
+
+  Hardware solution:                                       1. Saturday, 04 April 2025; 10:10 AM – 11:40 AM
+  Perform register writes in the first half of the clock     (Make-up class)
+  cycle;
+  Then a read for the same register (holding the
+  updated data) for a subsequent instruction, can be
+  made in the second half of the same clock cycle;
+                                                                                                             34
+
