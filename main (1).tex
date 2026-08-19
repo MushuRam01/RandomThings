@@ -1,0 +1,617 @@
+\documentclass[11pt,a4paper]{article}
+
+% ------------------------------------------------------------
+% PACKAGES
+% ------------------------------------------------------------
+
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{microtype}
+
+% ------------------------------------------------------------
+% FORMATTING
+% ------------------------------------------------------------
+
+\setstretch{1.08}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    urlcolor=blue
+}
+
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{HRV-Based Asthma Monitoring}
+\rhead{Progress Report}
+\cfoot{\thepage}
+
+\titleformat{\section}
+  {\large\bfseries}
+  {\thesection.}
+  {0.6em}
+  {}
+
+\titleformat{\subsection}
+  {\normalsize\bfseries}
+  {\thesubsection}
+  {0.6em}
+  {}
+
+% ------------------------------------------------------------
+% DOCUMENT
+% ------------------------------------------------------------
+
+\begin{document}
+
+% ------------------------------------------------------------
+% TITLE PAGE
+% ------------------------------------------------------------
+
+\begin{titlepage}
+    \centering
+
+    \vspace*{2.5cm}
+
+    {\LARGE\bfseries HRV-Based Asthma Monitoring Project\par}
+
+    \vspace{0.4cm}
+
+    {\Large Internship Work and Project Progress Report\par}
+
+    \vspace{1.4cm}
+
+    {\large Aarush Ram Anandh\par}
+
+    \vspace{0.25cm}
+
+    {\normalsize Koita Centre for Digital Health (KCDH)\\
+    Ashoka University\par}
+
+    \vspace{1cm}
+
+    \begin{tabular}{rl}
+        Original Internship Period: & 15 April 2026 -- 14 June 2026 \\
+        Continued Project Involvement: & June 2026 -- Present \\
+        Report Date: & August 2026
+    \end{tabular}
+
+    \vfill
+
+    \textit{Summary of project progress, individual contributions, current work,
+    and proposed next steps.}
+
+    \vspace{1.2cm}
+
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ------------------------------------------------------------
+\section{Project Overview}
+% ------------------------------------------------------------
+
+The project investigates whether longitudinal wearable-derived physiological
+signals, with a primary focus on Heart Rate Variability (HRV), can be used to
+characterise changes in patient state and eventually provide advance warning
+of asthma deterioration.
+
+The work has progressed through three main stages. First, the cohort and the
+available physiological signals were characterised. Second, the statistical
+and temporal behaviour of HRV was studied in detail, including missingness,
+irregular sampling, baseline drift, cyclic behaviour, and between-patient
+variation. Third, candidate preprocessing and change-point detection methods
+were investigated and partially implemented.
+
+The current project focus is a multi-factor full-cohort analysis. The purpose
+of this phase is to establish a defensible representation of patient state
+before resuming change-point annotation and predictive modelling.
+
+% ------------------------------------------------------------
+\section{Work Completed So Far}
+% ------------------------------------------------------------
+
+\subsection{Cohort-Level Analysis}
+
+A broad analysis was carried out across the available wearable signals,
+including heart rate, HRV, temperature, SpO$_2$, steps, and sleep.
+
+The cohort analysis included:
+
+\begin{itemize}[leftmargin=1.5em]
+    \item minimum and maximum value distributions;
+    \item kernel density estimation;
+    \item sampling-frequency analysis;
+    \item irregular-sampling analysis;
+    \item missingness and temporal-gap analysis;
+    \item pooled and patient-level mean, median, and standard deviation;
+    \item number of observations per patient and per vital;
+    \item proportion of missing measurements;
+    \item modal values and possible spikes;
+    \item physiological validity filtering where appropriate;
+    \item wearable-compliance analysis.
+\end{itemize}
+
+The dataset contains approximately $12.2$ million heart-rate measurements and
+approximately $1.0$ million HRV measurements. The pooled HRV values range from
+approximately 22 to 129 ms, with a pooled mean of approximately 86.9 ms and a
+median of approximately 91 ms.
+
+The analysis also confirmed that different wearable signals are sampled on
+different schedules. HRV is nominally sampled at approximately ten-minute
+intervals, but the actual observations do not lie on a perfectly regular
+temporal grid.
+
+% ------------------------------------------------------------
+\subsection{HRV Characteristics}
+% ------------------------------------------------------------
+
+The initial literature review of HRV characteristics was led by Jatin Dangi.
+The resulting candidate properties were then tested against the cohort rather
+than assumed to be present.
+
+The analysis examined properties including:
+
+\begin{itemize}[leftmargin=1.5em]
+    \item bounded positive HRV measurements;
+    \item multimodal or bimodal behaviour;
+    \item autocorrelation and temporal persistence;
+    \item non-stationary baseline behaviour;
+    \item circadian structure;
+    \item heavy-tailed contamination;
+    \item irregular sampling;
+    \item structured missingness;
+    \item causal or online processing requirements;
+    \item between-patient variation.
+\end{itemize}
+
+The purpose of this analysis was to determine which properties of the signal
+should constrain later modelling choices.
+
+% ------------------------------------------------------------
+\subsection{Missingness and Temporal Segmentation}
+% ------------------------------------------------------------
+
+Missingness is a major characteristic of the HRV data.
+
+Because the observations are irregularly sampled, a gap slightly larger than
+the nominal ten-minute sampling interval cannot automatically be treated as a
+missing period. The distribution of inter-observation gaps was therefore
+studied across patients and across the cohort.
+
+Following this analysis and domain-expert input, a gap of 180 minutes was
+adopted as the threshold for separating ordinary sampling irregularity from
+long periods of missing data.
+
+When the gap between two measurements exceeds 180 minutes, the time series is
+split into separate contiguous segments while preserving the original
+timestamps.
+
+This segmentation rule is subsequently used when applying stateful or
+sequential algorithms to the HRV series.
+
+% ------------------------------------------------------------
+\subsection{Baseline Drift and Cyclic Behaviour}
+% ------------------------------------------------------------
+
+Rolling and tumbling statistics were used to study whether patient HRV
+fluctuates around a fixed baseline or whether the centre of the signal changes
+over time.
+
+Three-hour windows were used to distinguish short-term fluctuation from
+longer-term movement in the signal.
+
+The analysis showed that the local centre of HRV changes over time and that
+clear cyclic behaviour is present across the cohort.
+
+This result is important because it directly challenges the assumption that a
+single fixed HRV value can be used as the normal baseline for a patient
+throughout the day.
+
+% ------------------------------------------------------------
+\subsection{Smoothing and Denoising}
+% ------------------------------------------------------------
+
+A large set of smoothing and denoising approaches was investigated before
+deciding whether smoothing should be part of the pipeline.
+
+The methods considered included:
+
+\begin{itemize}[leftmargin=1.5em]
+    \item moving-average and exponential-smoothing methods;
+    \item Kalman and state-space models;
+    \item Gaussian-process models;
+    \item particle filters;
+    \item regime-switching models;
+    \item robust filters;
+    \item spectral methods;
+    \item Variational Autoencoders and related neural architectures.
+\end{itemize}
+
+Candidate methods were evaluated not only by how strongly they reduced signal
+variance, but also by whether they preserved physiologically meaningful
+temporal structure.
+
+This investigation showed that aggressive smoothing can remove useful signal
+structure together with noise. As a result, smoothing was not retained as a
+mandatory preprocessing stage for the current pipeline.
+
+% ------------------------------------------------------------
+\subsection{Change-Point Detection}
+% ------------------------------------------------------------
+
+A broad range of change-point detection methods was investigated and
+implemented experimentally.
+
+The final methodological focus was narrowed to four complementary classes:
+
+\begin{enumerate}[leftmargin=1.7em]
+
+    \item \textbf{Bayesian Online Change-Point Detection (BOCPD)} for abrupt
+    changes in statistical moments;
+
+    \item \textbf{Kernel Change-Point Detection (KCPD)} for general
+    distributional changes;
+
+    \item \textbf{Kalman/state-space methods} for gradual drift and changes in
+    temporal dynamics;
+
+    \item \textbf{Hidden Markov Models (HMMs)} for transitions between
+    recurring states.
+
+\end{enumerate}
+
+The purpose of using complementary detectors is that a physiological change
+may appear as a shift in mean, variance, distribution, temporal dependence,
+gradual trend, or latent state.
+
+Implementation work on the selected CPD methods was started, but further
+development was paused while the project returned to full-cohort analysis.
+
+% ------------------------------------------------------------
+\section{My Contributions}
+% ------------------------------------------------------------
+Across these tasks, my role included not only implementation and empirical analysis, but also reviewing the mathematical validity of the methods being used and ensuring that the statistical-analysis code remained faithful to the underlying definitions.
+\subsection{Smoothing-Method Implementation}
+
+I contributed to the implementation and evaluation of candidate smoothing
+methods.
+
+My work focused on testing whether smoothing architectures were compatible
+with the statistical properties observed in the HRV data and whether they
+preserved useful structure rather than simply producing smoother signals.
+
+This contributed to the decision not to treat smoothing as an automatically
+required preprocessing step.
+
+% ------------------------------------------------------------
+\subsection{Variational Autoencoder Investigation}
+% ------------------------------------------------------------
+
+I specifically investigated Variational Autoencoders as a possible denoising
+approach.
+
+I developed the argument that, under a Gaussian observation model, VAE
+reconstruction can be interpreted as a probabilistic Gaussian denoising
+process. The encoder maps an observation into a latent probability
+distribution, while the decoder reconstructs the signal through a Gaussian
+likelihood.
+
+A convolutional VAE was also implemented and evaluated on the HRV data.
+
+Although smoothing was ultimately not retained as a required stage of the
+pipeline, this work provided both an implementation and a mathematical
+interpretation of VAE-based denoising in the context of the project.
+
+% ------------------------------------------------------------
+\subsection{Change-Point Detection Implementation}
+% ------------------------------------------------------------
+
+I contributed to the implementation of the selected change-point detection
+methods, including work around the BOCPD, kernel, Kalman/state-space, and HMM
+approaches.
+
+This work was subsequently placed on hold while the cohort-analysis stage was
+completed.
+
+% ------------------------------------------------------------
+\subsection{Full-Cohort HRV Analysis}
+% ------------------------------------------------------------
+
+I contributed significantly to the full-cohort HRV analysis.
+
+A major part of my contribution was investigating whether temporal behaviour
+seen in individual patients was systematic across the wider cohort.
+
+I used non-overlapping tumbling windows to calculate local mean and median HRV
+statistics. These representations exposed repeated cycle-like behaviour
+throughout the cohort, with the structure particularly clear in the tumbling
+median.
+
+This provided experimental evidence that the HRV process has a time-dependent
+structure rather than fluctuating randomly around one patient-specific
+constant.
+A further part of my contribution was to evaluate the mathematical correctness of the statistical analyses being used and to verify that the corresponding code implemented those methods faithfully. This included checking whether the statistical quantities being computed matched their intended mathematical definitions, whether assumptions used in the analysis were valid for the data, and whether implementation choices altered the interpretation of the resulting statistics.
+% ------------------------------------------------------------
+\subsection{Cyclic Structure and Patient Baselines}
+% ------------------------------------------------------------
+
+The working hypothesis was that HRV exhibits recurring within-day structure,
+rather than fluctuating around a single fixed patient-specific baseline.
+
+To evaluate this hypothesis, I computed non-overlapping tumbling-window
+estimates of the local mean and median separately for every patient in the
+available cohort. Patient-level inspection of the trajectories generated by
+this analysis showed within-day cyclic behaviour for every patient, with the
+pattern visible under both estimators. The result was therefore not produced
+solely by pooling patients, nor was it restricted to one of the two summary
+statistics.
+
+The relationship between a periodic process and finite-window statistics can
+be stated formally. Let $X_i(t)$ denote the HRV process for patient $i$, and
+let $T=24$ hours. Assume that the process is periodic in its
+finite-dimensional distributions: for every finite collection of times
+$t_1,\ldots,t_m$,
+
+\[
+\bigl(X_i(t_1+T),\ldots,X_i(t_m+T)\bigr)
+\overset{d}{=}
+\bigl(X_i(t_1),\ldots,X_i(t_m)\bigr).
+\]
+
+Consider a finite sample window formed using the same set of relative sampling
+positions $u_1,\ldots,u_m$ at each time $t$,
+
+\[
+W_i(t)
+=
+\bigl(X_i(t+u_1),\ldots,X_i(t+u_m)\bigr),
+\]
+
+and let $\mathcal{S}$ be any deterministic, time-invariant statistic applied
+to that window. Define the resulting statistic process by
+
+\[
+s_i(t)=\mathcal{S}\bigl(W_i(t)\bigr).
+\]
+
+By the assumed periodicity of the finite-dimensional distributions,
+
+\[
+W_i(t+T)\overset{d}{=}W_i(t).
+\]
+
+Applying the same deterministic statistic to both windows therefore gives
+
+\[
+s_i(t+T)
+=
+\mathcal{S}\bigl(W_i(t+T)\bigr)
+\overset{d}{=}
+\mathcal{S}\bigl(W_i(t)\bigr)
+=
+s_i(t).
+\]
+
+Thus, any deterministic, time-invariant statistic computed from corresponding
+finite sample windows inherits the period of the underlying process in
+distribution. If the measured trajectory itself is exactly periodic and the
+same relative observations are available after each shift by $T$, the stronger
+pointwise result $s_i(t+T)=s_i(t)$ follows.
+
+In the present data, the recurring behaviour of both the tumbling mean and
+tumbling median provides empirical evidence for a daily time-dependent HRV
+structure throughout the available cohort. It does not, by itself, prove exact
+periodicity of every realised statistic. Rather, the result is consistent with
+the periodic-process condition above and shows that the observed structure is
+not an artefact of using only the mean or only the median. Because the data are
+irregularly sampled, the sampling pattern and missingness must also be
+accounted for when testing the strength of this daily structure.
+
+This has a direct implication for patient-baseline modelling. If the distribution of HRV changes periodically with time, then representing the normal state of patient $i$ using a single constant baseline,
+
+\[
+b_i,
+\]
+
+is generally inadequate.
+
+A more appropriate representation is a time-dependent baseline,
+
+\[
+b_i(t),
+\]
+
+or, when additional physiological context is incorporated,
+
+\[
+b_i(t,z_t),
+\]
+
+where $z_t$ denotes relevant contextual or physiological state information such as sleep, activity, or another latent patient state.
+% ------------------------------------------------------------
+\subsection{Exploratory Work on Prediction}
+% ------------------------------------------------------------
+
+In parallel with the main project work, I have continued exploring possible
+architectures for predicting future change points.
+
+This work is exploratory and is not yet part of the main project pipeline.
+
+The prediction problem differs from change-point detection. Change-point
+detection identifies whether a meaningful transition has already occurred,
+whereas prediction aims to estimate the risk or timing of a future transition
+from the patient's current and historical physiological state.
+
+I have therefore treated predictive architecture design as a later-stage
+problem that should build on the patient-state representation currently being
+developed through the full-cohort analysis.
+
+% ------------------------------------------------------------
+\section{Current Work}
+% ------------------------------------------------------------
+
+The current project priority is the multi-factor full-cohort analysis.
+
+The objective is to determine how HRV and the other available physiological
+signals behave jointly across patients and over time.
+
+The immediate questions are:
+
+\begin{itemize}[leftmargin=1.5em]
+
+    \item which physiological variables show consistent temporal structure;
+
+    \item which variables have stable versus time-varying patient-specific
+    baselines;
+
+    \item how circadian, sleep, activity, and other physiological factors relate
+    to HRV;
+
+    \item which features remain consistent enough across the cohort to be useful
+    for later modelling;
+
+    \item how clinically relevant changes should eventually be represented for
+    change-point detection and prediction.
+
+\end{itemize}
+
+The outcome of this stage should be a more complete representation of patient
+state that can be used as the basis for subsequent CPD and predictive models.
+
+% ------------------------------------------------------------
+\section{Proposed Work for the Next Three Months}
+% ------------------------------------------------------------
+
+\subsection{Month 1: Full-Cohort Data Validation and Preparation}
+
+\textit{Target deadline based on current progress: 15 September 2026}
+
+The primary objective for Month 1 is to complete a rigorous full-cohort analysis across all available physiological factors.
+
+This will include:
+
+\begin{itemize}[leftmargin=1.5em]
+    \item completing cohort-level statistical analysis for each available factor;
+    \item identifying potential ``ghost data'', implausible readings, duplicated observations, or other artefacts;
+    \item defining factor-specific rules for detecting and removing unreliable measurements;
+    \item validating the cleaned data across the cohort;
+    \item preparing summary statistics, figures, and diagrams required for the planned cohort paper.
+\end{itemize}
+
+The expected outcome of Month 1 is a cleaned and statistically characterised full-cohort dataset, together with the analysis and visual material required for manuscript preparation.
+
+% ------------------------------------------------------------
+
+\subsection{Month 2: Factor-Specific Change-Point Detection}
+
+Month 2 will restart the change-point detection work using the improved understanding of the cohort developed during Month 1.
+
+For each physiological factor, a set of minimal conditions will first be defined. These conditions will describe statistically significant and clinically or analytically meaningful properties that a change-point method should be able to detect for that factor.
+
+Using the existing CPD method arsenal prepared by Jatin Dangi, a smaller and more appropriate collection of change-point detection methods will then be selected for each physiological factor.
+
+The work during this month will include:
+
+\begin{itemize}[leftmargin=1.5em]
+    \item defining factor-specific statistical change conditions;
+    \item evaluating the suitability of existing CPD methods against those conditions;
+    \item selecting a small set of complementary CPD methods for each factor;
+    \item applying the selected methods across the full cohort;
+    \item associating detected changes with known exact or approximate asthma exacerbation dates;
+    \item exploring candidate machine-learning architectures in parallel for subsequent predictive modelling.
+\end{itemize}
+
+The expected outcome of Month 2 is a cohort-wide dataset in which physiologically relevant changes have been annotated using the selected CPD methods and aligned, where available, with known exacerbation events.
+
+% ------------------------------------------------------------
+
+\subsection{Month 3: Statistical Validation and CPD Preprint}
+
+Month 3 will focus on validating the selected CPD framework and preparing a preprint describing the methodology and results.
+
+The central objective will be to determine, using cohort-level statistical analysis, how reliably the selected CPD methods detect known asthma exacerbations.
+
+The evaluation will quantify:
+
+\begin{itemize}[leftmargin=1.5em]
+    \item the proportion of known exacerbations associated with at least one detected change point;
+    \item false-negative rate;
+    \item false-positive rate;
+    \item detection timing relative to known exacerbation dates;
+    \item consistency of detection across patients and physiological factors.
+\end{itemize}
+
+The intended result is to establish whether the selected CPD framework achieves very high sensitivity to known exacerbations, ideally with near-zero false negatives, while explicitly quantifying the remaining false positives.
+
+The Month 3 deliverable will be a preprint presenting the selected CPD methodology, the factor-specific selection criteria, and the cohort-level validation results. Any claim regarding complete exacerbation coverage will be made only if supported by the final statistical evaluation.
+\newline
+Ideally by the end of this month along with a preprint ready, we would start prepping for evaluation and training of the ML architectures.
+
+\subsection{Month 4: Validation and Testing of Predictive ML Models}
+
+Based on the expected complexity of model comparison and tuning, I estimate that at least one month will be required for rigorous evaluation of candidate machine-learning architectures.
+
+The primary objective of the predictive model will be simple and clinically interpretable:
+
+\begin{quote}
+Given the currently available longitudinal patient data, predict the next asthma exacerbation.
+\end{quote}
+
+The work during this month will include:
+
+\begin{itemize}[leftmargin=1.5em]
+    \item implementing and comparing multiple candidate predictive architectures;
+    \item defining appropriate training, validation, and test procedures;
+    \item tuning model hyperparameters and architecture choices;
+    \item evaluating predictive performance across patients;
+    \item comparing different formulations of the prediction target and prediction horizon;
+    \item analysing false positives, false negatives, calibration, and time-to-event performance;
+    \item continuing to develop improved modelling architectures and evaluation strategies based on the observed results.
+\end{itemize}
+
+The expected outcome of Month 4 is a rigorously evaluated predictive modelling framework capable of estimating the next exacerbation event from the available patient history. The emphasis will be on obtaining a reproducible and defensible evaluation. 
+% ------------------------------------------------------------
+\section{Expected Deliverables}
+% ------------------------------------------------------------
+
+The detailed deliverables for the proposed extension will be defined together
+with the three-month roadmap.
+
+They will be stated as concrete outputs such as completed cohort analyses,
+validated statistical findings, reproducible implementations, modelling
+experiments, and documented technical results.
+
+% ------------------------------------------------------------
+\section{Summary}
+% ------------------------------------------------------------
+
+The project has progressed from initial signal characterisation to a more
+structured understanding of HRV behaviour across the cohort.
+
+My contributions have included implementation and evaluation of smoothing
+methods, mathematical and experimental investigation of VAE-based denoising,
+implementation of selected CPD methods, and substantial involvement in the
+full-cohort HRV analysis.
+
+My main analytical contribution in the current phase has been the experimental
+identification and mathematical interpretation of cyclic HRV behaviour and its
+implication that a single fixed patient baseline is not an adequate
+representation of normal HRV.
+
+The current multi-factor cohort analysis is intended to extend this result into
+a more complete patient-state representation before CPD and predictive
+modelling are resumed.
+
+\end{document}
