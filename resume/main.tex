@@ -1,0 +1,93 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[top=0.48in,bottom=0.48in,left=0.53in,right=0.53in]{geometry}
+\usepackage{times}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{microtype}
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\linespread{1.06}
+\hypersetup{hidelinks,breaklinks=true}
+
+\titleformat{\section}{\bfseries\normalsize}{}{0pt}{}[\titlerule]
+\titlespacing*{\section}{0pt}{13pt}{4pt}
+
+\newcommand{\entry}[3]{%
+  \noindent\textbf{#1}\hfill\textbf{#3}\\[-1pt]
+  \textit{#2}\par
+}
+\newenvironment{cvitems}{%
+  \begin{itemize}[leftmargin=1.15em,label=\textbullet,itemsep=2.5pt,topsep=3pt,parsep=0pt,partopsep=0pt]
+}{\end{itemize}}
+
+\begin{document}
+\begin{minipage}[c]{0.81\textwidth}
+  {\LARGE\bfseries Aarush Ram Anandh}\par\vspace{3pt}
+  B.Sc. (Hons.) Mathematics \& Computer Science \quad|\quad Ashoka University\par\vspace{2pt}
+  \href{mailto:aarush.anandh_ug2024@ashoka.edu.in}{aarush.anandh\_ug2024@ashoka.edu.in}
+  \quad|\quad +91 9659786783\par\vspace{2pt}
+  \href{https://github.com/MushuRam01}{github.com/MushuRam01}
+  \quad|\quad
+  \href{https://www.linkedin.com/in/aarush-ram-anandh/}{linkedin.com/in/aarush-ram-anandh}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.14\textwidth}
+  \raggedleft\includegraphics[width=0.88\linewidth]{logo.png}
+\end{minipage}
+
+\section{EDUCATION}
+\noindent\textbf{Ashoka University}, Sonipat \hfill \textbf{2024--2028}\\[-1pt]
+B.Sc. (Hons.) Mathematics and Computer Science\\[2pt]
+\textbf{Relevant coursework:} Real Analysis, Linear Algebra, Probability and Statistics, Statistical Inference, Machine Learning, Algorithms, Discrete Mathematics; currently pursuing Algebra I, Complex Analysis, Artificial Intelligence, Reinforcement Learning and Symbolic Logic.
+
+\section{RESEARCH EXPERIENCE}
+\entry{Constrained Image-Synthesis Lab, Ashoka University}{Research Fellow}{Sep 2025--Present}
+\begin{cvitems}
+  \item Improved colour fidelity in latent diffusion models, achieving $\Delta E_{00}<1$ and approximately \textbf{4$\times$ better colour accuracy} than evaluated open-source baselines; published a public \href{https://arxiv.org/abs/2601.17259}{preprint}.
+  \item Developing \textbf{Controlled Generalised Sliced Wasserstein (CGSW)}, a controllable optimal-transport framework with control-conditioned probes, projections and slice aggregation. Abstract submitted to ICLR 2027.
+  \item Studying metricity, admissibility, stability, minimality and optimal probe/readout construction; implementing computational methods in \textbf{C++} and machine-verified specifications and proofs in \textbf{Lean}.
+  \item Built an image-processing pipeline that generated \textbf{20,000+} training inputs for lab use. \href{https://github.com/MushuRam01/CDR-Decomposition}{[GitHub]}
+\end{cvitems}
+
+\entry{Koita Centre for Digital Health, Ashoka University}{Research Intern (part-time)}{May 2026--Present}
+\begin{cvitems}
+  \item Developed preprocessing and windowed analysis for longitudinal heart rate, HRV, sleep, SpO$_2$ and activity data.
+  \item Explored sequential modelling and change-point methods for patient-state analysis of noisy physiological signals.
+\end{cvitems}
+
+\section{PUBLICATION \& SELECTED RESEARCH}
+\noindent\textbf{Public preprint -- colour-accurate latent diffusion} \hfill \textbf{2026}\\[-1pt]
+Colour-preserving methods for latent diffusion; \href{https://arxiv.org/abs/2601.17259}{arXiv:2601.17259}.\par\vspace{3pt}
+\noindent\textbf{Hyperspectral Waste Analysis} \hfill \textbf{2026--Present}\\[-1pt]
+Working with a dataset of \textbf{hyperspectral image cubes}, each with 224 spectral bands, and masks across seven waste categories. Constructing object-level spectral measures to study class separability using sliced and controlled optimal-transport distances.
+
+\section{ADDITIONAL TECHNICAL \& TEACHING EXPERIENCE}
+\entry{Avartan Labs}{Product Engineering / Machine Learning Intern}{May--Jul 2026}
+\begin{cvitems}
+  \item Developed an RT-DETR-based detection, classification and tracking pipeline for \textbf{18 waste-material classes} in real-time sorting.
+  \item Investigated focal loss, logit adjustment, class-specific thresholds and targeted fine-tuning to improve rare-class performance; evaluated detector failure modes with crop-based refinement.
+  \item Set up and ideation of an a \textbf{near-infrared (NIR) waste-segregation system} for visually similar plastics, handling parts procurement and running preliminary experiments.
+\end{cvitems}
+
+\entry{Lodha Genius Programme, Ashoka University}{Teaching Assistant}{Jun--Jul 2025}
+\begin{cvitems}
+  \item Supported four faculty members in an IUCAA telescope workshop and an IoT workshop for \textbf{200+ students}.
+\end{cvitems}
+
+\entry{Yulu Bikes}{Research / Engineering Project}{Apr--May 2023}
+\begin{cvitems}
+  \item Modelled electric-vehicle dynamics in \textbf{MATLAB/Simulink}, testing the effect of vehicle parameters and operating conditions on system performance.
+\end{cvitems}
+
+\section{TECHNICAL SKILLS}
+\textbf{Programming:} Python, C++, C, OCaml, Bash \quad
+\textbf{Machine learning:} PyTorch, Diffusers, TensorFlow\\[2pt]
+\textbf{Formal methods:} Lean \quad
+\textbf{Research areas:} Optimal transport, diffusion models, computer vision, time-series analysis\\[2pt]
+\textbf{Scientific computing:} MATLAB/Simulink, OpenFOAM
+
+\end{document}
