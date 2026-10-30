@@ -1,0 +1,157 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[margin=0.68in]{geometry}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{microtype}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.34em}
+\setlist[itemize]{leftmargin=1.25em,itemsep=0.12em,topsep=0.08em,parsep=0em}
+\titleformat{\section}{\large\bfseries}{}{0em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{}{0em}{}
+\pagestyle{plain}
+
+\begin{document}
+
+\begin{center}
+{\Large\bfseries HRV-Based Asthma Monitoring Project}\\
+{\normalsize\bfseries Internship Work Report, Contribution, and Four-Month Plan}\\[0.35em]
+Aarush Ram Anandh \\
+Koita Centre for Digital Health (KCDH), Ashoka University \\
+Original internship period: 15 April 2026--14 June 2026 \\
+Continued project involvement: June 2026--Present \\
+Report date: August 2026
+\end{center}
+
+\section{1. Overall Project Progress}
+
+\textbf{Project goal}
+
+The project studies whether longitudinal wearable signals can characterise patient state and support early warning of asthma deterioration. The main signal studied so far has been Heart Rate Variability (HRV), alongside heart rate, temperature, SpO2, steps, and sleep. The long-term goal is to move from signal understanding to change-point detection and then to predictive modelling of asthma exacerbations.
+
+\textbf{Data and cohort analysis completed}
+
+The dataset contains approximately 12.2 million heart-rate measurements and approximately 1.0 million HRV measurements. The available signals were studied through cohort-level and patient-level summaries, including ranges, distributions, observation counts, means, medians, standard deviations, missingness, and sampling frequency.
+
+The analysis confirmed that wearable data does not arrive on a perfectly regular grid. HRV is nominally sampled around every 10 minutes, but actual observations are irregular and affected by gaps. Missingness was studied patient by patient and across the cohort, and a 180-minute threshold was adopted, after analysis and domain input, to separate ordinary irregularity from long missing periods. This is important because later sequential methods should not treat long gaps as continuous physiology.
+
+\textbf{Main HRV finding}
+
+The key question was whether HRV moves around one fixed patient baseline or whether the normal level changes through the day. I checked this manually across all available patients using code, using tumbling-window summaries such as tumbling mean and tumbling median to inspect local HRV over time.
+
+The same broad within-day pattern was visible for every patient checked. It was not only a pooling effect and was not only caused by one estimator. The modelling implication is simple: a single fixed HRV baseline is not enough. Future CPD and prediction should use a time-aware baseline, and later should also account for physiological context such as sleep, activity, or patient state.
+
+\textbf{Smoothing, denoising, and CPD progress}
+
+Smoothing and denoising methods were investigated before deciding whether they should be part of the pipeline. The methods considered included moving average, exponential smoothing, Kalman/state-space methods, Gaussian processes, particle filters, regime-switching methods, robust filters, spectral methods, VAEs, and related neural approaches. The main conclusion was that aggressive smoothing can remove useful physiological structure along with noise, so smoothing was not kept as a mandatory preprocessing step.
+
+Change-point detection work was narrowed to four useful method families: Bayesian online CPD, kernel CPD, Kalman/state-space methods, and HMMs. CPD implementation was started, then paused because the full-cohort and multi-factor analysis needed to be completed first.
+
+\newpage
+
+\section{2. My Specific Contribution and Basis for Revised Stipend}
+
+\textbf{Specific technical contributions}
+
+My role has combined implementation, statistical checking, patient-level analysis, and modelling direction. The main contributions are:
+
+\begin{itemize}
+    \item Implemented and evaluated candidate smoothing methods for HRV.
+    \item Investigated whether smoothing methods preserved useful temporal structure instead of only reducing variance.
+    \item Investigated VAE-based denoising and implemented a convolutional VAE on HRV data.
+    \item Contributed to implementations involving BOCPD, kernel CPD, Kalman/state-space methods, and HMMs.
+    \item Checked the statistical and method assumptions behind the techniques being used.
+    \item Verified that statistical code outputs matched the quantities they were supposed to compute.
+    \item Carried out patient-level and full-cohort HRV analysis.
+    \item Manually checked the within-day HRV feature across all available patients using code.
+    \item Showed that the recurring HRV structure appears under both tumbling mean and tumbling median.
+    \item Connected this result to the next modelling decision: later methods should not depend on a single fixed baseline.
+    \item Continued exploratory work on predictive modelling architectures for future exacerbation prediction.
+\end{itemize}
+
+\textbf{Why this contribution is valuable for the next phase}
+
+The project has now moved beyond isolated internship tasks. The next phase depends on continuity because the person doing the work needs to understand the data, the code, the patient-level patterns, the missingness, and the modelling assumptions.
+
+\begin{itemize}
+    \item My work has already connected implementation, statistical checking, cohort analysis, and modelling direction.
+    \item The HRV baseline finding directly affects how CPD and prediction should be designed.
+    \item Continuing in the role would preserve technical continuity while the project moves from analysis to deliverables.
+\end{itemize}
+
+\textbf{Why approximately 35 hours per week are needed}
+
+The next stage cannot be handled through occasional work. It covers multiple physiological factors, each of which needs cleaning, validation, cohort summaries, patient-level checks, interpretation, and documentation. CPD and prediction also require repeated cycles of running methods, checking outputs, correcting issues, rerunning, and comparing results with exact or approximate exacerbation dates.
+
+\begin{itemize}
+    \item A 35-hour weekly commitment is needed for sustained progress across analysis, implementation, validation, and writing.
+    \item I plan to distribute this time flexibly across weekdays and weekends.
+    \item From 23 August onward, I will also be available to work in person on campus.
+\end{itemize}
+
+\textbf{Basis for revised contract and stipend}
+
+My original internship contract covered 15 April 2026 to 14 June 2026. Since then, I have continued working on the HRV project under the guidance of Dr Mayank and Jatin Dangi, and I am now able to take a more active role in the project.
+
+The proposed extension involves increased hours, broader responsibility, and direct ownership of important next-stage deliverables. A revised contract and stipend adjustment would reflect the actual time commitment, continuity, and technical contribution required for the next phase.
+
+\newpage
+
+\section{3. Plan for the Next Four Months}
+
+\subsection{Month 1: Full-Cohort Validation and Preparation}
+
+I expect to work with Isha Kala and Jatin Dangi, under the guidance of Dr Mayank, Dr Naveen, and Dr Pratyush.
+
+\begin{itemize}
+    \item Complete cohort-level analysis for every available physiological factor.
+    \item Identify ghost data, implausible readings, duplicated observations, and other artefacts.
+    \item Define factor-specific rules for detecting and removing unreliable measurements.
+    \item Validate the cleaned data across the cohort.
+    \item Prepare summary statistics, figures, and diagrams required for the planned cohort paper.
+    \item Target deadline based on current progress: 15 September 2026.
+    \item Deliverable: cleaned and statistically characterised full-cohort data with material ready for manuscript preparation.
+\end{itemize}
+
+\subsection{Month 2: Factor-Specific Change-Point Detection}
+
+I expect to work with Jatin Dangi, under the guidance of Dr Mayank and Dr Pratyush.
+
+\begin{itemize}
+    \item Define what counts as a meaningful change for each physiological factor.
+    \item Select suitable CPD methods from Jatin Dangi's existing method collection.
+    \item Use complementary methods where needed, including BOCPD, kernel CPD, Kalman/state-space methods, and HMMs.
+    \item Apply selected CPD methods across the full cohort.
+    \item Align detected changes with known exact or approximate asthma exacerbation dates.
+    \item Continue exploring candidate machine-learning architectures for later prediction.
+    \item Deliverable: cohort-wide candidate change annotations linked, where possible, to known exacerbation events.
+\end{itemize}
+
+\subsection{Month 3: CPD Validation and Preprint}
+
+I expect to continue working with Jatin Dangi, under the guidance of Dr Mayank and Dr Pratyush.
+
+\begin{itemize}
+    \item Validate the selected CPD framework at cohort level.
+    \item Measure the proportion of known exacerbations associated with detected change points.
+    \item Measure false negatives, false positives, detection timing, and consistency across patients and factors.
+    \item Check whether the framework can achieve very high sensitivity to known exacerbations.
+    \item Make any strong claim only if supported by the final statistical evaluation.
+    \item Prepare the CPD methodology, selection criteria, and cohort-level results as a preprint.
+    \item Deliverable: validated CPD results and a draft/preprint-ready report.
+\end{itemize}
+
+\subsection{Month 4: Predictive Model Evaluation}
+
+\begin{itemize}
+    \item Implement and compare candidate predictive modelling architectures.
+    \item Define training, validation, and test procedures.
+    \item Tune model choices, hyperparameters, prediction targets, and prediction horizons.
+    \item Evaluate performance across patients.
+    \item Analyse false positives, false negatives, calibration, and time-to-event behaviour.
+    \item Improve architectures and evaluation strategy based on observed results.
+    \item Deliverable: reproducible predictive framework for estimating future exacerbation risk from patient history.
+\end{itemize}
+
+\end{document}
