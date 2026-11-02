@@ -1,0 +1,157 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=22mm]{geometry}
+\usepackage{xcolor,amsmath,amssymb,enumitem,tabularx,booktabs,hyperref,tcolorbox}
+\definecolor{purple}{RGB}{103,58,183}
+\definecolor{deep}{RGB}{69,39,160}
+\definecolor{pale}{RGB}{243,238,250}
+\definecolor{ink}{RGB}{36,33,54}
+\hypersetup{colorlinks=true,linkcolor=deep,urlcolor=purple}
+\color{ink}
+\setlength{\parskip}{5pt}
+\setlength{\parindent}{0pt}
+\setlist[itemize]{leftmargin=*,itemsep=3pt,topsep=3pt}
+\newtcolorbox{critique}{colback=pale,colframe=purple,boxrule=.6pt,arc=1.5mm,title=Critical intervention,fonttitle=\bfseries}
+\newtcolorbox{repair}{colback=white,colframe=deep,boxrule=.6pt,arc=1.5mm,title=How to fix it,fonttitle=\bfseries}
+\newcommand{\slide}[3]{\clearpage\section*{Slide #1 --- #2}\textcolor{purple}{\textbf{Suggested duration: #3}}\par\medskip}
+\newcommand{\source}[1]{\par\small\textcolor{deep}{\textbf{Paper reference:} #1}\normalsize}
+\begin{document}
+\begin{center}
+{\LARGE\bfseries\color{deep} Presenter Notes and Critical Commentary}\\[5pt]
+{\large Goal-Oriented Intelligence Path Planning for LLMs Based Drone in Adversarial Conditions}\\[8pt]
+{\large Arush Ramanand}\\[4pt]
+\textcolor{purple}{Eight-slide talk | approximately 18--20 minutes}
+\end{center}
+\vspace{5mm}
+\textbf{Purpose.} These are spoken talking points, not slide text. The accompanying Beamer deck should remain concise. The paper is \texttt{paper.pdf}; the older visual reference is \texttt{old.pdf}. Every critique below distinguishes what the authors report from what they leave unspecified. Do not use the older deck as evidence.
+
+\textbf{Criticism pacing.} Slides 1--2: introduce the motivation fairly. Slide 3: begin identifying architectural gaps. Slide 4: challenge the reproducibility of training and inference. Slide 5: interrogate the reported numbers. Slide 6: deliver the strongest methodological critique. Slide 7: propose controlled comparisons and fixes. Slide 8: summarize without overstating either success or failure.
+
+\slide{1}{Motivation: Can Foundation Models Help Drones Navigate?}{1.5 min}
+\textbf{Opening talking points}
+\begin{itemize}
+\item Autonomous navigation asks for a path from a known start to a goal, avoiding obstacles and adapting when the environment changes.
+\item Conventional path planners can solve geometric navigation problems. The research question is whether language and vision-language models add useful context-sensitive, goal-directed capabilities.
+\item This paper proposes using visual observations and navigation instructions to generate drone waypoints, largely evaluated in simulation.
+\item Distinguish the categories carefully: RRT is a classical randomized planning algorithm, \emph{not} machine learning; YOLOv8 is learned object detection; an LLM/VLM is a learned generative model.
+\end{itemize}
+\textbf{Transition.} ``Before asking whether this system works, why might anyone want a language model in a drone in the first place?''
+\textbf{Criticism timing:} Do not attack the paper yet. Say that the motivation is plausible but evidence must be evaluated separately.
+\source{pp. 1, 3--4, Introduction and Methodology.}
+
+\slide{2}{Why LLMs? The Authors' Broader Motivation}{2 min}
+\textbf{Talking points}
+\begin{itemize}
+\item The authors discuss three ambitions: coordination between UAVs; processing large volumes of information into actionable decisions; and adapting to dynamic environments.
+\item In a multi-UAV setting, a language model might interpret mission instructions or summarize messages across agents. In a single-drone setting, it might combine visual context with a high-level destination instruction.
+\item This is the conceptual appeal: not just detecting obstacles, but integrating heterogeneous information and producing a plan.
+\item \textbf{Boundary of the evidence:} the paper does \emph{not} experimentally evaluate multi-UAV coordination, communication-anomaly detection, or comprehensive emergency response. Its quantitative evaluation concerns simulated navigation.
+\end{itemize}
+\textbf{Transition.} ``So how did the authors actually try to connect visual perception to a flight path?''
+\textbf{Criticism timing:} Make one gentle distinction between aspirational motivation and demonstrated contribution; reserve detailed objections for later.
+\source{p. 3, discussion of multi-UAV operations and proposed contribution.}
+
+\slide{3}{Architecture: From Observations to Flight}{3 min}
+\textbf{Walk through original Figure 3, in order}
+\begin{enumerate}[leftmargin=*,itemsep=4pt]
+\item The user provides a navigation objective, including start and goal coordinates and instructions.
+\item The drone acquires RGB and depth observations. YOLOv8 is used for visual object detection and environmental context.
+\item A prompt or model input combines the navigation objective with visual/environmental information and is sent to a remote LLM/VLM component.
+\item The model returns waypoint instructions. A response handler parses them; Euclidean interpolation inserts intermediate points at about $0.1\,$m spacing.
+\item The processed trajectory is published through ROS to the drone motion controller. Updated sensing may permit replanning, but the paper does not specify when or how often.
+\end{enumerate}
+\textbf{Explain interpolation briefly.} Between waypoints $w_i$ and $w_{i+1}$, the geometric interpolation is $q(\alpha)=(1-\alpha)w_i+\alpha w_{i+1}$ for $0\leq\alpha\leq1$. This increases sampling density; it does not automatically smooth corners, prevent collisions, or make the route dynamically feasible. This formula is an \emph{explanatory reconstruction}, not a quoted paper equation.
+\begin{critique}
+\textbf{First substantive architectural gap:} YOLOv8 normally provides image-space detections, not automatically obstacle coordinates in a common world frame. The paper does not explain depth fusion, camera calibration, coordinate transformation, localization, or collision validation. Nor does it specify controller type, replanning frequency, or remote-model latency. Do \emph{not} assert that PID is used.
+\end{critique}
+\begin{repair}
+Specify a calibrated RGB-D perception pipeline, world-frame localization, occupancy/obstacle representation, geometric collision checking, controller interface, and end-to-end latency/replanning protocol.
+\end{repair}
+\source{p. 4, Figure 3 and Methodology; p. 5, sensor description.}
+
+\slide{4}{Training, Prompt Structure, and Inference}{3.5 min}
+\textbf{Explain the crucial distinction between training and deployment.}
+\begin{itemize}
+\item \textbf{Dataset generation:} the authors describe simulated scenarios with start, goal, and obstacle positions. Page 5 says an RRT planner generates reference waypoint trajectories.
+\item \textbf{Fine-tuning claim:} a pretrained model is adapted with cross-entropy loss over 105 epochs; the authors report training loss near $0.15$ by approximately epoch 65. The paper does not identify the exact model, dataset size, split, or coordinate tokenization.
+\item \textbf{Inference:} the paper gives ``Input = Starting point with Goal Coordinates + Visual Input (Map) + Instruction.'' A model generates a structured waypoint sequence, which is parsed and passed to trajectory refinement.
+\item \textbf{Alternative model usage:} the text also mentions few-shot prompting with three visual examples and commercial models (Gemini, GPT-4, Claude, Grok). It does not clearly relate this pathway to the fine-tuned system or attribute results by model.
+\end{itemize}
+\begin{critique}
+\textbf{Major reproducibility problem:} What exactly was fine-tuned? On what examples, in what representation, and how was it evaluated? A model trained on structured RRT coordinates is not thereby shown to understand RGB/depth images or YOLOv8 outputs. The authors describe both prompting and fine-tuning without establishing the experimental distinction. A low training loss alone does not prove collision-free navigation or generalization.
+
+\textbf{Additional factual inconsistency:} the claimed minimum obstacle clearance is $2\,$m on page 4 and $1.2\,$m on page 5. Standard RRT also does not guarantee a shortest path, despite the paper's wording.
+\end{critique}
+\begin{repair}
+Publish the exact model/checkpoint, prompt template, input/output serialization, trajectory-generation code, dataset statistics, training/validation/test splits, optimizer and fine-tuning method. Separate \emph{prompt-only}, \emph{fine-tuned}, and \emph{vision-conditioned} experiments. Define one consistent clearance rule and verify it geometrically.
+\end{repair}
+\textbf{Transition.} ``With that uncertainty about what was actually trained, what do the reported results tell us?''
+\source{pp. 4--5, Methodology and Results.}
+
+\slide{5}{Experimental Results: What Was Measured?}{3 min}
+\textbf{Direct the audience to Table I and Figure 4.}
+\begin{center}\small
+\begin{tabular}{lrrrr}\toprule
+Scenario & Obstacles & Moving & Success & Avg. time \\\midrule
+Simple & 8--10 & 3 & 95.0\% & 65.7 s\\
+Moderate & 10--12 & 7 & 92.0\% & 65.4 s\\
+Complex & 12--16 & 10 & 91.5\% & 69.2 s\\
+Dynamic & 16--20 & 12 & 89.0\% & 72.0 s\\\bottomrule
+\end{tabular}
+\end{center}
+\begin{itemize}
+\item The reported success rate decreases by six percentage points between the simple and dynamic categories. Completion time is generally higher in the more difficult cases, although moderate is slightly faster than simple.
+\item The paper provides obstacle counts but does not rigorously define the four difficulty categories. For ``dynamic,'' it mentions moving obstacles but does not specify motion patterns or velocities.
+\item Figure 4 labels these percentages ``efficiency,'' although Table I presents them as goal-reaching success rates; no separate efficiency definition is supplied.
+\end{itemize}
+\begin{critique}
+\textbf{Here challenge the evidence directly:} The number of trials, seeds, scenario-generation protocol, uncertainty estimates, and precise success criterion are not reported. Without denominators, a 95\% figure cannot be assessed statistically. No direct RRT baseline is provided. These are preliminary descriptive numbers, not proof of superior navigation.
+\end{critique}
+\begin{repair}
+Report $N$ runs per condition, multiple seeds, confidence intervals, collision counts, clearance, path length, planning latency, and identical test maps for all methods. Define each scenario class operationally, including obstacle geometry and motion distributions.
+\end{repair}
+\source{p. 5, Table I, Figure 4, and Results.}
+
+\slide{6}{Evaluation Gaps: Does the LLM Actually Help?}{2 min}
+\textbf{This is the strongest critical slide. Say the central objection clearly.}
+\begin{itemize}
+\item The authors apparently use RRT to produce training targets, then evaluate an LLM planner without showing the performance of the teacher planner on the same scenarios.
+\item Standard RRT is a conventional planning baseline; other relevant comparators include RRT*, A*, and suitable reactive/receding-horizon methods. Which method is appropriate depends on the map representation and dynamics.
+\item The paper does not isolate whether any gains arise from the language model, the vision encoder, prompt engineering, or conventional trajectory processing.
+\item Claims about real-world deployment, GPS denial, bad weather, and real-time adaptation go beyond the simulation evidence presented.
+\end{itemize}
+\begin{critique}
+\textbf{Core criticism to emphasize aloud:} ``They trained a model to imitate a planner, but did not show why we should use the imitation instead of the planner.'' There is no controlled comparison demonstrating better success, faster planning, shorter paths, safer clearance, or useful instruction-following. The paper's claimed contribution therefore remains inadequately validated.
+\end{critique}
+\begin{repair}
+Use paired evaluations on identical held-out maps: RRT, RRT*, prompt-only VLM, fine-tuned LLM, and hybrid LLM+planner. Report both navigation quality and inference cost. Run ablations removing visual input, fine-tuning, and path refinement. Evaluate on genuinely unseen maps and controlled sensor noise.
+\end{repair}
+\source{pp. 4--6, Methods, Results, and Conclusion.}
+
+\slide{7}{Alternative Approaches and a Better Research Design}{2.5 min}
+\textbf{Explain that these are proposed comparisons, not experiments in the paper.}
+\begin{itemize}
+\item \textbf{A* / RRT / RRT*:} transparent geometric baselines. RRT* addresses asymptotic path-cost optimality; plain RRT generally does not.
+\item \textbf{Model predictive control (MPC):} a receding-horizon method useful for handling dynamical constraints and replanning; performance depends on its model and obstacle predictions.
+\item \textbf{Reinforcement learning:} can learn policies through interaction, but needs careful safety evaluation and fair training-budget comparisons.
+\item \textbf{Hybrid architecture:} let an LLM/VLM interpret mission instructions and high-level context; let a geometric planner produce and validate feasible paths; let a low-level controller execute them.
+\end{itemize}
+\begin{repair}
+\textbf{Concrete experiment:} Build a common benchmark of held-out static and moving-obstacle maps. Evaluate all planners with the same sensing inputs and safety constraints. Measure goal success, collision rate, path length relative to a reference, minimum clearance, wall-clock planning/replanning latency, and robustness to sensor noise. Test whether language instructions change mission behavior in ways conventional planners cannot easily express.
+\end{repair}
+\textbf{Constructive takeaway.} The promising contribution may be semantic mission-level reasoning, not token-level imitation of RRT coordinates. But that hypothesis needs its own experiments.
+\source{Our proposed analysis/extensions; do not attribute these experiments to the paper.}
+
+\slide{8}{Conclusion: Promise Versus Evidence}{1 min}
+\textbf{Closing points}
+\begin{itemize}
+\item The paper proposes a potentially interesting integration of visual perception, foundation models, waypoint parsing, and conventional control.
+\item Its simulated results are suggestive, but the training procedure, model identity, evaluation protocol, and comparative baselines are too poorly specified to support strong claims.
+\item A rigorous follow-up should test the LLM's \emph{added value}, not merely whether a generated route sometimes reaches the goal.
+\end{itemize}
+\textbf{Closing line:} ``The question is not whether an LLM can output coordinates. It is whether it adds a measurable capability that justifies placing it in the planning loop.''
+\textbf{Final tone:} Critique the methodology and evidential claims, not the authors personally. Do not say the approach has been disproven; say the paper has not established its proposed advantages.
+\source{pp. 4--6, interpreted against the reported evidence.}
+\end{document}

@@ -1,0 +1,75 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=17mm]{geometry}
+\usepackage{xcolor,booktabs,tabularx,array,enumitem,hyperref}
+\definecolor{purple}{RGB}{103,58,183}
+\definecolor{deep}{RGB}{69,39,160}
+\definecolor{ink}{RGB}{36,33,54}
+\definecolor{muted}{RGB}{100,94,115}
+\hypersetup{pdfauthor={Arush Ram Anandh},
+  pdftitle={LLM-Guided Drone Path Planning: One-Page Reference Sheet},
+  colorlinks=true,urlcolor=purple}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\setlist[itemize]{leftmargin=13pt,itemsep=2pt,topsep=2pt,parsep=0pt}
+\newcommand{\heading}[1]{\par\addvspace{7pt}{\color{deep}\bfseries #1}\par\nobreak\vspace{1pt}}
+\newcommand{\refnote}[1]{{\small\color{muted}#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\begin{document}
+\color{ink}
+\fontsize{10.5}{13}\selectfont
+
+{\fontsize{19}{23}\selectfont\bfseries\color{deep}LLM-Guided Drone Path Planning\par}
+{\color{muted}Reference sheet for the 20-minute paper discussion\hfill Arush Ram Anandh\par}
+\vspace{3pt}{\color{purple}\hrule height 0.6pt}\vspace{5pt}
+
+\textbf{Paper:} Muhammad Sohail Farooq et al., \emph{Goal-Oriented Intelligence Path Planning for LLMs Based Drone in Adversarial Conditions}. References below use page numbers in the supplied seven-page \texttt{paper.pdf}.
+
+\heading{Research question and reported approach}
+Can foundation models use visual context and instructions to help a drone reach its goal while avoiding obstacles? The paper connects camera observations and YOLOv8 object detection to an LLM/VLM, then parses and interpolates generated waypoints before passing a trajectory through ROS to a motion controller. The reported evaluation uses \textbf{simulation}. \refnote{[pp. 4--5, Fig. 3]}
+
+\heading{Terms used in the talk}
+\begin{tabularx}{\linewidth}{@{}>{\bfseries}p{26mm}Y@{}}
+LLM / VLM & Large language model / vision-language model; a VLM can process images alongside text.\\
+Waypoint & An intermediate position along a proposed route.\\
+YOLOv8 & A learned object detector; detections alone do not supply 3D world coordinates.\\
+RRT & Rapidly-exploring Random Tree: a classical randomized motion planner. Ordinary RRT does not guarantee a shortest path.\\
+ROS & Robot Operating System: software infrastructure connecting robotics components.\\
+\end{tabularx}
+
+\heading{Reported simulation results}
+{\renewcommand{\arraystretch}{1.15}
+\begin{tabularx}{\linewidth}{@{}Yrrrr@{}}
+\toprule
+Environment & Obstacles & Moving obstacles & Success rate & Mean time (s)\\
+\midrule
+Simple   & 8--10  & 3  & 95.0\% & 65.7\\
+Moderate & 10--12 & 7  & 92.0\% & 65.4\\
+Complex  & 12--16 & 10 & 91.5\% & 69.2\\
+Dynamic  & 16--20 & 12 & 89.0\% & 72.0\\
+\bottomrule
+\end{tabularx}\par}
+\refnote{[p. 5, Table I and Fig. 4]} All four categories include moving obstacles. Trial counts, uncertainty, formal difficulty definitions and obstacle motion models are unspecified. Figure 4 calls these success percentages ``efficiency'' without defining a separate path-efficiency metric.
+
+\heading{What the evidence leaves unresolved}
+\begin{itemize}
+  \item \textbf{Training and inference:} the paper describes both few-shot prompting and fine-tuning, but does not identify which system produced the aggregate results. Model identity, dataset size, splits and exact prompt are unclear.
+  \item \textbf{Clearance and safety:} the text gives 2 m clearance on p. 4 and 1.2 m on p. 5. Interpolation adds points along segments; it alone ensures neither collision avoidance nor physically feasible flight.
+  \item \textbf{Added value:} no controlled planner baseline, path-quality comparison or latency measurement establishes an LLM advantage. The displayed evaluation does not demonstrate physical flight, GPS-denied operation or bad-weather performance.
+\end{itemize}
+\refnote{[pp. 4--6; evaluation gaps identified in this discussion]}
+
+\heading{Hybrid pipeline: our proposed extension}
+\begin{enumerate}[leftmargin=15pt,itemsep=0pt,topsep=2pt,parsep=0pt]
+\item \textbf{LLM/VLM:} interpret the mission and propose high-level goals or constraints.
+\item \textbf{Conventional planner:} compute a feasible route and check collisions.
+\item \textbf{Controller:} track the trajectory.
+\end{enumerate}
+This separates instruction understanding from geometric planning. \textbf{The paper does not evaluate this proposal}; its benefit and safety would need controlled testing.
+
+\heading{Question to take away}
+What measurable capability does the foundation model add beyond the conventional planner used to generate its reference paths?
+
+\end{document}
