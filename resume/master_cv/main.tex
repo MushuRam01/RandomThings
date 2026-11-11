@@ -1,0 +1,149 @@
+\documentclass[10pt,a4paper]{article}
+
+\usepackage[top=0.48in,bottom=0.48in,left=0.53in,right=0.53in]{geometry}
+\usepackage{times}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{titlesec}
+\usepackage{microtype}
+
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\linespread{1.06}
+\hypersetup{hidelinks,breaklinks=true}
+
+\titleformat{\section}{\bfseries\normalsize}{}{0pt}{}[\titlerule]
+\titlespacing*{\section}{0pt}{13pt}{4pt}
+
+\newcommand{\entry}[3]{%
+  \noindent\textbf{#1}\hfill\textbf{#3}\\[-1pt]
+  \textit{#2}\par
+}
+\newenvironment{cvitems}{%
+  \begin{itemize}[leftmargin=1.15em,label=\textbullet,itemsep=2.5pt,topsep=3pt,parsep=0pt,partopsep=0pt]
+}{\end{itemize}}
+
+\begin{document}
+\begin{minipage}[c]{0.81\textwidth}
+  {\LARGE\bfseries Aarush Ram Anandh}\par\vspace{3pt}
+  B.Sc. (Hons.) Mathematics \& Computer Science \quad|\quad Ashoka University\par\vspace{2pt}
+  \href{mailto:aarush.anandh_ug2024@ashoka.edu.in}{aarush.anandh\_ug2024@ashoka.edu.in}
+  \quad|\quad +91 9659786783\par\vspace{2pt}
+  \href{https://github.com/MushuRam01}{github.com/MushuRam01}
+  \quad|\quad
+  \href{https://www.linkedin.com/in/aarush-ram-anandh/}{linkedin.com/in/aarush-ram-anandh}
+\end{minipage}\hfill
+\begin{minipage}[c]{0.14\textwidth}
+  \raggedleft\includegraphics[width=0.88\linewidth]{logo.png}
+\end{minipage}
+
+\section{EDUCATION}
+\noindent\textbf{Ashoka University}, Sonipat \hfill \textbf{2024--2028}\\[-1pt]
+B.Sc. (Hons.) Mathematics and Computer Science\\[2pt]
+\textbf{Relevant coursework:} Real Analysis, Linear Algebra, Probability and Statistics, Statistical Inference, Machine Learning, Algorithms, Discrete Mathematics; currently pursuing Algebra I, Complex Analysis, Artificial Intelligence, Reinforcement Learning and Symbolic Logic.
+
+\section{RESEARCH EXPERIENCE}
+\entry{Constrained Image-Synthesis Lab, Ashoka University}{Research Fellow}{Sep 2025--Present}
+\begin{cvitems}
+  \item Improved colour fidelity in latent diffusion models, achieving $\Delta E_{00}<1$ and approximately \textbf{4$\times$ better colour accuracy} than evaluated open-source baselines; this work is reported in the preprint listed under Publication.
+  \item Developing \textbf{Controlled Generalised Sliced Wasserstein (CGSW)}, a controllable optimal-transport framework with control-conditioned probes, projections and slice aggregation. Paper submitted to JMLR.
+  \item Studying metricity, admissibility, stability, minimality and optimal probe/readout construction; implementing computational methods in \textbf{C++} and machine-verified specifications and proofs in \textbf{Lean}.
+  \item Built an image-processing pipeline that generated \textbf{20,000+} training inputs for lab use. \href{https://github.com/MushuRam01/CDR-Decomposition}{[GitHub]}
+\end{cvitems}
+
+% Pipeline scope: pipeline.pdf; approximately 70% sensitivity is the user-reported result, not tabulated in that PDF.
+\entry{Koita Centre for Digital Health, Ashoka University}{Research Intern (part-time)}{May 2026--Present}
+\begin{cvitems}
+  \item Contributed to a wearable-data pipeline achieving approximately \textbf{70\% sensitivity (recall)} for \textbf{asthma exacerbation detection} in study evaluation.
+  \item Developed patient-day preprocessing for \textbf{191 patients and 15,691 patient-days}, processing \textbf{12.1 million heart-rate and 736,000 HRV readings} alongside sleep, temperature and activity data.
+  \item Implemented HR/HRV smoothing, residual extraction, change-point features and windowed aggregation for \textbf{XGBoost, CatBoost, RNN and LSTM} classifiers, with 1--7-day input-window ablations.
+  \item Implemented \textbf{patient-wise 80:20 train/test evaluation across five seeds} and patient-bootstrap confidence intervals, keeping same-day detection separate from future-onset prediction.
+  \item Built experimental routes for frozen \textbf{Timestral, TimesFM and Chronos-2} forecast-surprise features and \textbf{MOMENT/MantisV2} embeddings; these routes were implemented but not yet run in the reported cohort evaluation.
+\end{cvitems}
+
+\section{PUBLICATION}
+\noindent\textbf{Inference-Time Loss-Guided Colour Preservation in Diffusion Sampling} \hfill \textbf{2026}\\[-1pt]
+Colour-preserving methods for latent diffusion; \href{https://arxiv.org/abs/2601.17259}{arXiv:2601.17259}.
+
+\section{ADDITIONAL TECHNICAL \& TEACHING EXPERIENCE}
+\entry{Avartan Labs}{Product Engineering / Machine Learning Intern}{May--Jul 2026}
+\begin{cvitems}
+  \item Raised rare-class correct detection from \textbf{40\% to 80\%} (\textbf{+40 percentage points}) in an \textbf{RT-DETR} detection, classification and tracking pipeline for \textbf{18 waste-material classes}.
+  \item Investigated focal loss, logit adjustment, class-specific thresholds and targeted fine-tuning to improve rare-class performance; evaluated detector failure modes with crop-based refinement.
+  \item Helped set up a \textbf{near-infrared (NIR) waste-segregation system} for visually similar plastics, handling parts procurement and running preliminary experiments.
+\end{cvitems}
+
+\entry{Lodha Genius Programme, Ashoka University}{Teaching Assistant}{Jun--Jul 2025}
+\begin{cvitems}
+  \item Supported four faculty members in an IUCAA telescope workshop and an IoT workshop for \textbf{200+ students}.
+\end{cvitems}
+
+\entry{Yulu Bikes}{Research / Engineering Project}{Apr--May 2023}
+\begin{cvitems}
+  \item Modelled electric-vehicle dynamics in \textbf{MATLAB/Simulink}, testing the effect of vehicle parameters and operating conditions on system performance.
+\end{cvitems}
+
+\newpage
+\section{PROJECTS}
+% Project sources reviewed on 11 Nov 2026: the linked public repositories and additional_info.pdf.
+% Confirm MEIKURAL / IML / RL start dates and individual contributions before tailoring applications.
+% User confirms MEIKURAL and RL are ongoing; unknown start dates are omitted.
+\entry{MEIKURAL: Hindustani Raag Recognition}{Audio Classification / Signal Processing \quad \href{https://github.com/MushuRam01/MEIKURAL}{[GitHub]}}{Ongoing}
+\begin{cvitems}
+  \item Developing a \textbf{Python/PyTorch} pipeline to classify \textbf{seven Hindustani raags} from audio, using recordings from the Saraga Hindustani dataset.
+  \item Implemented resampling, RMS normalisation, overlapping \textbf{30-second windows}, STFT feature extraction and CNN classification; explored per-window tonic alignment, full-recording tonic alignment and native-frequency spectrogram representations.
+  \item Trained a native-STFT CNN on \textbf{3,471 audio windows} over 30 CUDA epochs; built interactive clip inference, prediction timelines and recording-level and window-level confusion-matrix reports.
+\end{cvitems}
+
+% Team project: report/report.tex names Aarush Ram Anandh and Tanush Seal.
+% No performance or leakage-prevention claims: reported metrics are not independently verified,
+% and build_features.py includes current-month target values in derived features.
+% End date uses latest commit per user: 55e4aeda23f232d338e771a61f860c14fbfb8b79, 13 May 2026.
+\entry{Monthly Equity Return Prediction}{Introduction to Machine Learning Coursework / Team Project \quad \href{https://github.com/MushuRam01/IML_project}{[GitHub]}}{Completed May 2026}
+\begin{cvitems}
+  \item Collaborated with \textbf{Tanush Seal} on a company-month financial forecasting pipeline combining a \textbf{CatBoost} baseline with residual-correction models.
+  \item Engineered lagged features, rolling statistics, momentum and volatility measures, categorical features and missingness indicators for financial panel data.
+  \item Compared \textbf{seven residual approaches}: Gaussian HMM, Transformer, MLP, CNN, Ridge, Elastic Net and CatBoost; developed chronological evaluation splits, company-level error diagnostics and prediction dashboards.
+\end{cvitems}
+
+% User confirms this is ongoing RL coursework with one teammate; individual ownership is unconfirmed.
+% PPO results are scoped to results.md; DQN has separate code and run artifacts.
+\entry{Reinforcement Learning for Pokemon Battles}{Reinforcement Learning Coursework / Two-Person Team \quad \href{https://github.com/Kabir1607/RL_MidSem_Kabir_Aarush}{[GitHub]}}{Ongoing}
+\begin{cvitems}
+  \item Collaborating on a controlled study of move-outcome variability and agent learning in \textbf{4v4 Pokemon Showdown battles}, comparing low- and high-variance move sets.
+  \item Co-developed a shared \textbf{Gymnasium/poke-env} environment with \textbf{763 observation features}, legality masks over 26 actions and potential-based reward shaping, with \textbf{MaskablePPO} and masked \textbf{DQN} agents.
+  \item Evaluated PPO across \textbf{two team variants and five seeds per variant}, with 200,000 decision steps per run; recorded final win rates of \textbf{99.7--100\%} over 1,020 battles per run against the fixed heuristic opponent across three opponent teams.
+  \item Analysed learning curves, convergence, Wilson confidence intervals and exact permutation tests; found no statistically significant learning-speed difference between team variants in the tested setup.
+\end{cvitems}
+
+% End date uses latest commit per user: ea539f4388e2be670eb3c7b0ca8a4cdd6868f9bb, 26 Jan 2026 (UTC).
+\entry{CDR-Decomposition Pipeline}{Vector Graphics / Training-Data Preparation \quad \href{https://github.com/MushuRam01/CDR-Decomposition}{[GitHub]}}{Jan 2026}
+\begin{cvitems}
+  \item Built a \textbf{Python} pipeline to extract structural die-line vectors from flexible-packaging \textbf{CorelDRAW (CDR)} artwork, supporting generation of \textbf{20,000+ training inputs} for internal lab use.
+  \item Automated headless \textbf{LibreOffice} conversion from CDR to SVG, parsed SVG/XML to separate embedded raster images, and applied luminance-based greyscale conversion and colour inversion.
+  \item Isolated high-contrast structural elements through black--white correspondence checks and geometric filtering of lines and rectangles; retained intermediate SVG outputs and extracted-raster metadata for inspection.
+\end{cvitems}
+
+\entry{Shooting Stability Trainer}{Computer Vision / Interactive Training Prototype \quad \href{https://github.com/MushuRam01/Shooting-Stability-Trainer}{[GitHub]}}{Sep 2025}
+\begin{cvitems}
+  \item Prototyped a webcam-based, low-cost alternative to SCATT-style motion tracing for rifle and pistol training using \textbf{Python, OpenCV, Flask-SocketIO and JavaScript}.
+  \item Tracked a coloured marker through HSV thresholding, contour filtering and centroid estimation; streamed marker coordinates and segmentation masks to a browser interface.
+  \item Implemented adjustable HSV thresholds, two-point scale calibration, aim-centre selection and manual motion-trace recording on a virtual target.
+\end{cvitems}
+
+\entry{Hyperspectral Waste Analysis}{Ongoing CGSW Experiment}{Sep 2026--Present}
+\begin{cvitems}
+  \item Conducting a hyperspectral waste-analysis experiment within the \textbf{Controlled Generalised Sliced Wasserstein (CGSW)} research described under Research Experience, using image cubes with \textbf{224 spectral bands} and segmentation masks across \textbf{seven waste categories}.
+  \item Constructing object-level spectral measures to evaluate \textbf{CGSW} for class separability, alongside sliced optimal-transport distances.
+\end{cvitems}
+
+\section{TECHNICAL SKILLS}
+\textbf{Programming:} Python, C++, C, OCaml, Bash \quad
+\textbf{Machine learning:} PyTorch, Diffusers, TensorFlow\\[2pt]
+\textbf{Formal methods:} Lean \quad
+\textbf{Research areas:} Optimal transport, diffusion models, computer vision, time-series analysis\\[2pt]
+\textbf{Scientific computing:} MATLAB/Simulink, OpenFOAM
+
+\end{document}
