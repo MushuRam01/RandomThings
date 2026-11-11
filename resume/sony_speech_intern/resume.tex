@@ -1,0 +1,60 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[top=0.55in,bottom=0.55in,left=0.6in,right=0.6in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{times,microtype,enumitem,hyperref,titlesec}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\linespread{1.04}
+\hypersetup{hidelinks,breaklinks=true}
+\titleformat{\section}{\bfseries\normalsize}{}{0pt}{}[\titlerule]
+\titlespacing*{\section}{0pt}{10pt}{4pt}
+\newcommand{\entry}[3]{\noindent\textbf{#1}\hfill\textbf{#3}\\[-1pt]\textit{#2}\par}
+\newenvironment{cvitems}{\begin{itemize}[leftmargin=1.1em,label=\textbullet,itemsep=2pt,topsep=3pt,parsep=0pt,partopsep=0pt]}{\end{itemize}}
+\begin{document}
+{\LARGE\bfseries Aarush Ram Anandh}\par\vspace{4pt}
+\href{mailto:aarush.anandh_ug2024@ashoka.edu.in}{aarush.anandh\_ug2024@ashoka.edu.in}\quad|\quad +91 9659786783\par\vspace{2pt}
+\href{https://github.com/MushuRam01}{github.com/MushuRam01}\quad|\quad
+\href{https://www.linkedin.com/in/aarush-ram-anandh/}{linkedin.com/in/aarush-ram-anandh}\par
+
+\section{EXECUTIVE SUMMARY}
+Audio ML developer building Hindustani raag classification with Python, PyTorch and STFT features.\\
+Hands-on resampling, normalisation, windowed inference and interactive prediction diagnostics.\\
+Diffusion and physiological-signal research; asthma detection contribution at about 70\% sensitivity.\par
+\section{EDUCATION}
+\textbf{Ashoka University} --- B.Sc. (Hons.), Computer Science and Mathematics \hfill \textbf{Expected 2028}
+\section{AUDIO MACHINE LEARNING PROJECT}
+\entry{MEIKURAL: Hindustani Raag Recognition}{Audio Classification / Signal Processing \href{https://github.com/MushuRam01/MEIKURAL}{[GitHub]}}{Ongoing}
+\begin{cvitems}
+  \item Developing a \textbf{Python/PyTorch} pipeline for \textbf{seven Hindustani raags} using the Saraga Hindustani dataset; implemented resampling, RMS normalisation and overlapping \textbf{30-second audio windows}.
+  \item Explored per-window and full-recording tonic alignment against native-frequency \textbf{STFT/CNN} representations; trained a native-STFT CNN on \textbf{3,471 windows over 30 CUDA epochs}.
+  \item Built interactive clip inference, prediction timelines, and recording-level and window-level confusion-matrix reports.
+\end{cvitems}
+\section{RELEVANT RESEARCH EXPERIENCE}
+\entry{Constrained Image-Synthesis Lab, Ashoka University}{Research Fellow}{Sep 2025--Present}
+\begin{cvitems}
+  \item Improved latent-diffusion colour fidelity to $\Delta E_{00}<1$, with approximately \textbf{4$\times$ better colour accuracy} than evaluated open-source baselines; results reported in the preprint below.
+  \item Developing \textbf{Controlled Generalised Sliced Wasserstein (CGSW)}, an optimal-transport framework with control-conditioned probes, projections and slice aggregation; paper submitted to \textbf{JMLR}.
+\end{cvitems}
+\entry{Koita Centre for Digital Health, Ashoka University}{Research Intern (part-time)}{May 2026--Present}
+\begin{cvitems}
+  \item Contributed to a wearable-data pipeline achieving approximately \textbf{70\% sensitivity (recall)} for \textbf{asthma exacerbation detection} in study evaluation.
+  \item Processed \textbf{12.1 million HR and 736,000 HRV readings}; built smoothing, residual, change-point and windowed features, with patient-wise evaluation across five seeds.
+\end{cvitems}
+\section{ADDITIONAL IMPLEMENTATION EXPERIENCE}
+\entry{Shooting Stability Trainer}{Computer Vision Prototype \href{https://github.com/MushuRam01/Shooting-Stability-Trainer}{[GitHub]}}{Sep 2025}
+\begin{cvitems}
+  \item Prototyped webcam-based motion tracing with \textbf{OpenCV, Flask-SocketIO and JavaScript}; used HSV thresholding, contour filtering and centroid estimation to track a coloured marker.
+  \item Built a browser interface with segmentation-mask feedback, adjustable HSV thresholds, two-point scale calibration, aim-centre selection and manual motion-trace recording.
+\end{cvitems}
+\entry{Avartan Labs}{Product Engineering / Machine Learning Intern}{May--Jul 2026}
+\begin{cvitems}
+  \item Raised rare-class correct detection from \textbf{40\% to 80\%} (\textbf{+40 percentage points}) in an \textbf{RT-DETR} detection, classification and tracking pipeline for \textbf{18 waste-material classes}.
+  \item Investigated focal loss, logit adjustment, class-specific thresholds and targeted fine-tuning for rare classes; evaluated detector failure modes through crop-based refinement.
+\end{cvitems}
+\section{PUBLICATION}
+\textbf{Inference-Time Loss-Guided Colour Preservation in Diffusion Sampling} (2026).\\
+Public preprint: \href{https://arxiv.org/abs/2601.17259}{arXiv:2601.17259}; colour-fidelity research described above.
+\section{TECHNICAL SKILLS}
+\textbf{Programming:} Python, C++, Bash.\quad \textbf{Frameworks:} PyTorch, TensorFlow, Diffusers, OpenCV.\\\textbf{Signal / Prototype Work:} STFT, RMS normalisation, resampling, CNNs, Flask-SocketIO, JavaScript.
+\end{document}

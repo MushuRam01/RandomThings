@@ -1,0 +1,32 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[top=0.75in,bottom=0.75in,left=0.75in,right=0.75in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{times,microtype,enumitem,hyperref,titlesec}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\linespread{1.10}
+\hypersetup{hidelinks,breaklinks=true}
+\titleformat{\section}{\bfseries\normalsize}{}{0pt}{}[\titlerule]
+\titlespacing*{\section}{0pt}{10pt}{4pt}
+\newcommand{\entry}[3]{\noindent\textbf{#1}\hfill\textbf{#3}\\[-1pt]\textit{#2}\par}
+\newenvironment{cvitems}{\begin{itemize}[leftmargin=1.1em,label=\textbullet,itemsep=2pt,topsep=3pt,parsep=0pt,partopsep=0pt]}{\end{itemize}}
+\begin{document}
+{\LARGE\bfseries Aarush Ram Anandh}\par\vspace{4pt}
+\href{mailto:aarush.anandh_ug2024@ashoka.edu.in}{aarush.anandh\_ug2024@ashoka.edu.in}\quad|\quad +91 9659786783\par\vspace{2pt}
+\href{https://github.com/MushuRam01}{github.com/MushuRam01}\quad|\quad
+\href{https://www.linkedin.com/in/aarush-ram-anandh/}{linkedin.com/in/aarush-ram-anandh}\par
+\vspace{20pt}
+11 November 2026\par\vspace{12pt}
+Hiring Team\\
+Sony Research India\par\vspace{12pt}
+\textbf{Application: Speech Recognition Internship}\par\vspace{14pt}
+Dear Hiring Team,\par\vspace{10pt}
+I am applying for the Speech Recognition internship at Sony Research India. I am completing a B.Sc. (Hons.) in Computer Science and Mathematics at Ashoka University, expected in 2028. My most relevant project is MEIKURAL, an ongoing Hindustani raag-recognition system that has given me practical experience with audio preprocessing, spectrogram-based learning and inference diagnostics.\par\vspace{10pt}
+MEIKURAL classifies seven raags using the Saraga Hindustani dataset. I implemented resampling, RMS normalisation, overlapping 30-second windows and STFT features, and explored per-window tonic alignment, full-recording alignment and native-frequency representations. I trained a native-STFT CNN on 3,471 windows over 30 CUDA epochs and built interactive clip inference, prediction timelines and recording-level and window-level confusion-matrix reports. This work has made representation choices, input handling and error inspection central parts of how I approach audio models.\par\vspace{10pt}
+My wider research includes a public preprint on inference-time colour preservation in latent diffusion and ongoing controllable optimal-transport research. At the Koita Centre for Digital Health, I contributed to a wearable-data pipeline achieving approximately 70\% sensitivity for asthma exacerbation detection in study evaluation. My work processes 12.1 million HR and 736,000 HRV readings into smoothing, residual and change-point features, with patient-wise evaluation. I have also built a webcam-tracking prototype that streams coordinates and segmentation masks through Flask-SocketIO to a browser interface, giving me experience connecting an algorithm to an interactive feedback loop.\par\vspace{10pt}
+At Avartan Labs, I raised rare-class correct detection from 40\% to 80\% in an RT-DETR pipeline covering 18 material classes. This industry internship gave me experience analysing detector failures and investigating targeted model improvements.\par\vspace{10pt}
+I would like to build on this foundation in speech recognition and speaker diarization, contributing Python/PyTorch implementation, signal-processing work and careful evaluation. The chance to learn from Sony\textquotesingle s speech researchers while working toward useful real-time systems is especially attractive. Thank you for considering my application.\par\vspace{14pt}
+Yours sincerely,\\[5pt]
+Aarush Ram Anandh
+\end{document}

@@ -1,0 +1,57 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[top=0.55in,bottom=0.55in,left=0.6in,right=0.6in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{times,microtype,enumitem,hyperref,titlesec}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\linespread{1.04}
+\hypersetup{hidelinks,breaklinks=true}
+\titleformat{\section}{\bfseries\normalsize}{}{0pt}{}[\titlerule]
+\titlespacing*{\section}{0pt}{10pt}{4pt}
+\newcommand{\entry}[3]{\noindent\textbf{#1}\hfill\textbf{#3}\\[-1pt]\textit{#2}\par}
+\newenvironment{cvitems}{\begin{itemize}[leftmargin=1.1em,label=\textbullet,itemsep=2pt,topsep=3pt,parsep=0pt,partopsep=0pt]}{\end{itemize}}
+\begin{document}
+{\LARGE\bfseries Aarush Ram Anandh}\par\vspace{4pt}
+\href{mailto:aarush.anandh_ug2024@ashoka.edu.in}{aarush.anandh\_ug2024@ashoka.edu.in}\quad|\quad +91 9659786783\par\vspace{2pt}
+\href{https://github.com/MushuRam01}{github.com/MushuRam01}\quad|\quad
+\href{https://www.linkedin.com/in/aarush-ram-anandh/}{linkedin.com/in/aarush-ram-anandh}\par
+
+\section{EXECUTIVE SUMMARY}
+Machine learning researcher with diffusion-model, image-processing and health-data experience.\\
+Contributed to asthma exacerbation detection achieving approximately 70\% sensitivity in study evaluation.\\
+Python, C++ and PyTorch applied to image analytics and noisy longitudinal physiological signals.\par
+\section{EDUCATION}
+\textbf{Ashoka University} --- B.Sc. (Hons.), Computer Science and Mathematics \hfill \textbf{Expected 2028}
+\section{RELEVANT RESEARCH EXPERIENCE}
+\entry{Constrained Image-Synthesis Lab, Ashoka University}{Research Fellow}{Sep 2025--Present}
+\begin{cvitems}
+  \item Improved latent-diffusion colour fidelity to $\Delta E_{00}<1$, with approximately \textbf{4$\times$ better colour accuracy} than evaluated open-source baselines; results reported in the preprint below.
+  \item Developing \textbf{Controlled Generalised Sliced Wasserstein (CGSW)}, an optimal-transport framework with control-conditioned probes, projections and slice aggregation; paper submitted to \textbf{JMLR}.
+  \item Conducting a \textbf{CGSW experiment} on hyperspectral waste images with \textbf{224 spectral bands and seven categories}, constructing object-level spectral measures to study class separability.
+\end{cvitems}
+\entry{Koita Centre for Digital Health, Ashoka University}{Research Intern (part-time)}{May 2026--Present}
+\begin{cvitems}
+  \item Contributed to a wearable-data pipeline achieving approximately \textbf{70\% sensitivity (recall)} for \textbf{asthma exacerbation detection} in study evaluation.
+  \item Developed preprocessing for \textbf{191 patients and 15,691 patient-days}, combining HR/HRV, sleep, temperature and activity data with smoothing, residual and change-point features.
+  \item Built XGBoost/CatBoost and RNN/LSTM modelling workflows; implemented \textbf{patient-wise evaluation across five seeds}, separating detection from onset prediction.
+\end{cvitems}
+\section{COMPUTER VISION EXPERIENCE}
+\entry{Avartan Labs}{Product Engineering / Machine Learning Intern}{May--Jul 2026}
+\begin{cvitems}
+  \item Raised rare-class correct detection from \textbf{40\% to 80\%} (\textbf{+40 percentage points}) in an \textbf{RT-DETR} detection, classification and tracking pipeline for \textbf{18 waste-material classes}.
+  \item Investigated focal loss, logit adjustment, class-specific thresholds and targeted fine-tuning for rare classes; evaluated detector failure modes through crop-based refinement.
+  \item Helped set up a \textbf{near-infrared waste-segregation system} for visually similar plastics, including parts procurement and preliminary experiments.
+\end{cvitems}
+\section{SELECTED PROJECTS}
+\entry{CDR-Decomposition Pipeline}{Vector Graphics / Training Data \href{https://github.com/MushuRam01/CDR-Decomposition}{[GitHub]}}{Jan 2026}
+\begin{cvitems}
+  \item Built a \textbf{Python} pipeline to isolate structural die-line vectors from CorelDRAW packaging artwork, supporting generation of \textbf{20,000+ training inputs} for lab use.
+  \item Automated headless \textbf{LibreOffice} CDR-to-SVG conversion, SVG/XML parsing, raster separation, luminance conversion and geometric filtering, retaining inspection outputs and metadata.
+\end{cvitems}
+\section{PUBLICATION}
+\textbf{Inference-Time Loss-Guided Colour Preservation in Diffusion Sampling} (2026).\\
+Public preprint: \href{https://arxiv.org/abs/2601.17259}{arXiv:2601.17259}; colour-fidelity research described above.
+\section{TECHNICAL SKILLS}
+\textbf{Programming:} Python, C++, Bash.\quad \textbf{Frameworks:} PyTorch, Diffusers, TensorFlow, OpenCV.\\\textbf{Methods:} Diffusion models, image processing, detection, classification, optimal transport, time-series analysis.
+\end{document}

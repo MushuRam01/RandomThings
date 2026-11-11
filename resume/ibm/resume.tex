@@ -1,0 +1,61 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[top=0.55in,bottom=0.55in,left=0.6in,right=0.6in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{times,microtype,enumitem,hyperref,titlesec}
+\pagestyle{empty}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+\linespread{1.04}
+\hypersetup{hidelinks,breaklinks=true}
+\titleformat{\section}{\bfseries\normalsize}{}{0pt}{}[\titlerule]
+\titlespacing*{\section}{0pt}{10pt}{4pt}
+\newcommand{\entry}[3]{\noindent\textbf{#1}\hfill\textbf{#3}\\[-1pt]\textit{#2}\par}
+\newenvironment{cvitems}{\begin{itemize}[leftmargin=1.1em,label=\textbullet,itemsep=2pt,topsep=3pt,parsep=0pt,partopsep=0pt]}{\end{itemize}}
+\begin{document}
+{\LARGE\bfseries Aarush Ram Anandh}\par\vspace{4pt}
+\href{mailto:aarush.anandh_ug2024@ashoka.edu.in}{aarush.anandh\_ug2024@ashoka.edu.in}\quad|\quad +91 9659786783\par\vspace{2pt}
+\href{https://github.com/MushuRam01}{github.com/MushuRam01}\quad|\quad
+\href{https://www.linkedin.com/in/aarush-ram-anandh/}{linkedin.com/in/aarush-ram-anandh}\par
+
+\section{EXECUTIVE SUMMARY}
+Machine learning researcher combining generative modelling with controlled RL experiments.\\
+Python/PyTorch experience with MaskablePPO, DQN, Transformers and financial time-series models.\\
+Public diffusion preprint; contributed to asthma detection achieving approximately 70\% sensitivity.\par
+\section{EDUCATION}
+\textbf{Ashoka University} --- B.Sc. (Hons.), Computer Science and Mathematics \hfill \textbf{Expected 2028}
+\section{RESEARCH EXPERIENCE}
+\entry{Constrained Image-Synthesis Lab, Ashoka University}{Research Fellow}{Sep 2025--Present}
+\begin{cvitems}
+  \item Improved latent-diffusion colour fidelity to $\Delta E_{00}<1$, with approximately \textbf{4$\times$ better colour accuracy} than evaluated open-source baselines; results reported in the preprint below.
+  \item Developing \textbf{Controlled Generalised Sliced Wasserstein (CGSW)}, an optimal-transport framework with control-conditioned probes, projections and slice aggregation; paper submitted to \textbf{JMLR}.
+  \item Implementing \textbf{C++} methods and machine-verified \textbf{Lean} specifications/proofs for CGSW.
+\end{cvitems}
+\entry{Koita Centre for Digital Health, Ashoka University}{Research Intern (part-time)}{May 2026--Present}
+\begin{cvitems}
+  \item Contributed to a wearable-data pipeline achieving approximately \textbf{70\% sensitivity (recall)} for \textbf{asthma exacerbation detection} in study evaluation.
+  \item Built HR/HRV smoothing and change-point workflows for \textbf{191 patients}, with patient-wise evaluation; implemented experimental frozen time-series foundation-model routes, not yet run in cohort evaluation.
+\end{cvitems}
+\section{INDUSTRY EXPERIENCE}
+\entry{Avartan Labs}{Product Engineering / Machine Learning Intern}{May--Jul 2026}
+\begin{cvitems}
+  \item Doubled rare-class correct detection from \textbf{40\% to 80\%} in an \textbf{18-class RT-DETR} sorting pipeline.
+  \item Investigated focal loss, logit adjustment, class-specific thresholds and targeted fine-tuning for rare classes; evaluated detector failure modes through crop-based refinement.
+\end{cvitems}
+\section{SELECTED AI PROJECTS}
+\entry{Reinforcement Learning for Pokemon Battles}{Two-Person RL Coursework Project \href{https://github.com/Kabir1607/RL_MidSem_Kabir_Aarush}{[GitHub]}}{Ongoing}
+\begin{cvitems}
+  \item Co-developed a \textbf{Gymnasium/poke-env} environment with \textbf{763 observation features}, legality masks over 26 actions, potential-based reward shaping, and \textbf{MaskablePPO and masked DQN} agents.
+  \item Evaluated PPO across \textbf{two team variants and five seeds each}, at 200,000 decision steps per run; analysed convergence, Wilson confidence intervals and exact permutation tests.
+  \item Recorded \textbf{99.7--100\% final win rates} against a fixed heuristic opponent across three opponent teams, over 1,020 battles per run; found no significant learning-speed difference between team variants.
+\end{cvitems}
+\entry{Monthly Equity Return Prediction}{Team Coursework Project \href{https://github.com/MushuRam01/IML_project}{[GitHub]}}{Completed May 2026}
+\begin{cvitems}
+  \item Collaborated with \textbf{Tanush Seal} on financial panel forecasting with a \textbf{CatBoost} baseline and \textbf{seven residual approaches}, including HMM, Transformer, MLP, CNN and linear models.
+  \item Engineered lagged features, rolling statistics, momentum, volatility and missingness indicators; developed chronological evaluation splits and company-level prediction/error dashboards.
+\end{cvitems}
+\section{PUBLICATION}
+\textbf{Inference-Time Loss-Guided Colour Preservation in Diffusion Sampling} (2026).\\
+Public preprint: \href{https://arxiv.org/abs/2601.17259}{arXiv:2601.17259}; colour-fidelity research described above.
+\section{TECHNICAL SKILLS}
+\textbf{Programming:} Python, C++, C, Bash, Lean.\quad \textbf{Frameworks:} PyTorch, TensorFlow, Diffusers.\\\textbf{Applied tools / Methods:} Gymnasium, MaskablePPO, DQN, CatBoost, Transformers, time-series analysis.
+\end{document}
